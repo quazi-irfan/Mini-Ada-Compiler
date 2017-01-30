@@ -77,7 +77,7 @@ public class Token {
         else if(tokenType == TokenType.string)
             return "TokenType " + tokenType + " Lexeme " + lexeme + " string value " + literal;
         else if(tokenType == TokenType.unknown)
-            return lexeme;
+            return "TokenType " + tokenType + " Lexeme " + lexeme;
         else
             return "TokenType " + tokenType + " Lexeme " + lexeme;
     }
