@@ -70,15 +70,24 @@ public class Token {
 
     @Override
     public String toString(){
-        if(tokenType == TokenType.inum)
-            return "TokenType " + tokenType + " Lexeme " + lexeme + " int value " + value;
-        else if(tokenType == TokenType.rnum)
-            return "TokenType " + tokenType + " Lexeme " + lexeme + " real value " + valueR;
-        else if(tokenType == TokenType.string)
-            return "TokenType " + tokenType + " Lexeme " + lexeme + " string value " + literal;
-        else if(tokenType == TokenType.unknown)
-            return "TokenType " + tokenType + " Lexeme " + lexeme;
-        else
-            return "TokenType " + tokenType + " Lexeme " + lexeme;
+        String formattedString;
+        String tokenTypeT = tokenType.name().concat("t");
+
+        if(tokenType == TokenType.inum){
+            formattedString = String.format("%-20s %-25s %-20s", tokenTypeT, lexeme, value );
+            return formattedString;
+        }
+        else if(tokenType == TokenType.rnum) {
+            formattedString = String.format("%-20s %-25s %-20s", tokenTypeT, lexeme, valueR );
+            return formattedString;
+        }
+        else if(tokenType == TokenType.string){
+            formattedString = String.format("%-20s %-25s %-20s", tokenTypeT, lexeme, literal );
+            return formattedString;
+        }
+        else{
+            formattedString = String.format("%-20s %-25s", tokenTypeT, lexeme );
+            return formattedString;
+        }
     }
 }

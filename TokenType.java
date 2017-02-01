@@ -12,12 +12,13 @@ public enum TokenType {
     mulop, // * / rem mod and
     assignop,
 
-    lparent,
-    rparent,
-    commat,
-    colont,
+    lparen,
+    rparen,
+    comma,
+    colon,
     semicolon,
     period,
 
+    eof,
     unknown
 }

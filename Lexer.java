@@ -21,14 +21,19 @@ public class Lexer {
 
     Token getNextToken() throws  IOException{
         // end of file
-        if(input == null)
-            return null;
+        if(input == null){
+            token = new Token(TokenType.eof, "");
+            return token;
+        }
 
         // if we've reached the end of the line then get a new line
         if(index > input.length() - 1) {
             input = reader.readLine();
-            if(input == null)
-                return null;
+            if(input == null){
+                token = new Token(TokenType.eof, "");
+                return token;
+            }
+
             input = removeComments(input);
             index = 0;
         }
@@ -80,7 +85,7 @@ public class Lexer {
 
             // reaches the end
             if(index >= input.length()){
-                token = new Token(TokenType.unknown, "Error parsing string literal  " + stringBuilder.toString());
+                token = new Token(TokenType.unknown, "Error missing string literal termination character " + stringBuilder.toString());
                 break;
             }
         }while(input.charAt(index) != '"');
@@ -90,7 +95,6 @@ public class Lexer {
         if(token.getTokenType() == TokenType.string){
             stringBuilder.append(Character.valueOf(input.charAt(index)));
             index++;
-            token.setTokenType(TokenType.string);
 
             String lexeme = stringBuilder.toString();
             token.setLexeme(lexeme);
@@ -103,7 +107,7 @@ public class Lexer {
             }
         } else {
             token.setTokenType(TokenType.unknown);
-            token.setLexeme("Error parsing string literal " + stringBuilder.toString());
+            token.setLexeme("Error missing string literal termination character " + stringBuilder.toString());
         }
 
     }
@@ -141,16 +145,16 @@ public class Lexer {
 
         switch(input.charAt(index)) {
             case '(':
-                token.setTokenType(TokenType.lparent);
+                token.setTokenType(TokenType.lparen);
                 break;
             case ')':
-                token.setTokenType(TokenType.rparent);
+                token.setTokenType(TokenType.rparen);
                 break;
             case ',':
-                token.setTokenType(TokenType.commat);
+                token.setTokenType(TokenType.comma);
                 break;
             case ':':
-                token.setTokenType(TokenType.colont);
+                token.setTokenType(TokenType.colon);
                 break;
             case ';':
                 token.setTokenType(TokenType.semicolon);
@@ -191,12 +195,17 @@ public class Lexer {
     }
 
     public static void processWordToken(){
+        int length = 1;
         StringBuilder stringBuilder = new StringBuilder();
 
         char currentChar = input.charAt(index);
 
         // parse the token
         while(String.valueOf(currentChar).matches("[a-zA-Z0-9_]")){
+            if(length > 17){
+                token = new Token(TokenType.unknown, "Error too long id token " + stringBuilder.toString());
+                return;
+            }
             stringBuilder.append(currentChar);
 
             index++;
@@ -205,6 +214,7 @@ public class Lexer {
             }else{
                 currentChar = input.charAt(index);
             }
+            length++;
         }
 
         // after successful parsing check which token is it
@@ -243,13 +253,13 @@ public class Lexer {
             // exit parsing, Error : no number after decimal point
             try {
                 if(currentChar == '.' & !String.valueOf(input.charAt(index+1)).matches("[0-9]")){
-                    token = new Token(TokenType.unknown, "Error parsing number " + stringBuilder.toString());
+                    token = new Token(TokenType.unknown, "Error no number after decimal point " + stringBuilder.toString());
                     index++;    // consume the . character
                     return;
                 }
             } catch (StringIndexOutOfBoundsException e){
                 if(currentChar == '.') {
-                    token = new Token(TokenType.unknown, "Error parsing number " + stringBuilder.toString());
+                    token = new Token(TokenType.unknown, "Error no number after decimal point " + stringBuilder.toString());
                     index++;    // consume the . character
                     return;
                 }
