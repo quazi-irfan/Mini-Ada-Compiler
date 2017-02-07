@@ -1,3 +1,6 @@
+/**
+ * Token classs represents an instance of a token
+ */
 public class Token {
     private TokenType tokenType;
     private String lexeme;
@@ -5,6 +8,7 @@ public class Token {
     private float valueR;
     private String literal;
 
+    // Constructor
     public Token(TokenType tokenType, String lexeme) {
         this.tokenType = tokenType;
         this.lexeme = lexeme;
@@ -68,6 +72,10 @@ public class Token {
             throw new UnsupportedValue();
     }
 
+    /**
+     * Based on the type of token we have different toString implementation
+     * @return
+     */
     @Override
     public String toString(){
         String formattedString;

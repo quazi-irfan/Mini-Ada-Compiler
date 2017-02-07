@@ -1,3 +1,7 @@
+/**
+ * This euum class holds type of tokens we can detect
+ */
+
 public enum TokenType {
     BEGIN, MODULE, CONSTANT, PROCEDURE, IS, IF, THEN, ELSE,
     ELSIF, WHILE, LOOP, FLOAT, INTEGER, CHAR, GET, PUT, END,

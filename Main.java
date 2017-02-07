@@ -2,35 +2,37 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+/**
+ * Quazi Irfan
+ * Compiler
+ * Assignment 1
+ * Lexical analyzer for a subset of Ada
+ */
+
 public class Main {
     public static void main(String[] args) throws Exception{
-        int numOfTokens = 0;
-        int numOfOutput = 0;
-
         if(args.length < 1){
             System.out.println("Enter input file name as 2nd argument.");
             return;
         }
 
+        // starts the main loop
         Lexer lexer = new Lexer(args[0]);
-
-        Token token = lexer.getNextToken();
-
-        System.out.println("TokenType            Lexeme                  Attribute");
-        while(token.getTokenType() != TokenType.eof){
-            numOfTokens++; numOfOutput++;
-            System.out.println(token);
-
-            if(numOfOutput % 5 == 0) enterToContinue();
-
-            token = lexer.getNextToken();
+        System.out.println("Number of tokens " + lexer.tokenList.size());
+        System.out.println("Tokens              Lexeme               Attributes");
+        for(int i=0; i<lexer.tokenList.size(); ) {
+            System.out.println(lexer.tokenList.get(i));
+            i++;
+            // break in output
+            if (i % 10 == 0)
+                enterToContinue();
         }
-        System.out.println(token);
-        System.out.println("Total number of tokens " + ++numOfTokens);  // ++ is to account for eof token
+
     }
 
+    // page brake utility function
     public static void enterToContinue(){
-        System.out.print(" Press Enter to see the next 5 tokens.");
+        System.out.print(" Press Enter to see the next 10 tokens.");
         try{
             BufferedReader tempHalt = new BufferedReader(new InputStreamReader(System.in));
             tempHalt.readLine();

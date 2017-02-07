@@ -1,67 +1,81 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * Lexical analyzer class
+ */
 public class Lexer {
     private String fileName = null;
     public static int index = 0;
     public static String input = null;
     public static Token token = new Token(TokenType.unknown, null);
     public static BufferedReader reader = null;
+    public List<Token> tokenList = new ArrayList<>();
 
     public Lexer(String fileName)throws IOException{
         this.fileName = fileName;
 
+        populateTokenList();
+    }
+
+    /**
+     * Generates the List of tokens available in the provided source file
+     * @throws IOException
+     */
+    private void populateTokenList() throws IOException{
         reader = new BufferedReader(new FileReader(this.fileName));
         input = reader.readLine();
-        if(input != null)
-            input = removeComments(input);
-        index = 0;
-    }
+        while(input != null){
+            index = 0;
 
-    Token getNextToken() throws  IOException{
-        // end of file
-        if(input == null){
-            token = new Token(TokenType.eof, "");
-            return token;
-        }
+            // while we are not at the end of line keep looping
+            while(index < input.length()) {
 
-        // if we've reached the end of the line then get a new line
-        if(index > input.length() - 1) {
-            input = reader.readLine();
-            if(input == null){
-                token = new Token(TokenType.eof, "");
-                return token;
+                // while we don't have a parsable character move forward
+                while (index < input.length() && input.charAt(index) <= 32){
+                    index++;
+                    continue;
+                }
+
+                // if our lookup for parsable character ends at the end of line break the loop
+                if(index == input.length()) {
+                    break;
+                }
+
+                // set the current token to unknown before we start parsing
+                token = new Token(TokenType.unknown, null);
+                if (String.valueOf(input.charAt(index)).matches("[a-zA-Z]")) {
+                    processWordToken();
+                } else if (String.valueOf(input.charAt(index)).matches("[0-9]")) {
+                    processNumberToken();
+                } else if (String.valueOf(input.charAt(index)).matches("[/<>:-]")) {
+                    processDoubleToken();
+                } else if (input.charAt(index) == '"') {
+                    processStringLiteral();
+                } else {
+                    processSingleToken();
+                }
+
+                if(token != null)
+                    tokenList.add(token);
             }
 
-            input = removeComments(input);
-            index = 0;
+            input = reader.readLine();
         }
 
-        // consume empty characters until we get to the first readable chacters
-        while (index < input.length() && input.charAt(index) <= 32) {
-            index++;
-            continue;
-        }
-
-        // start looking for token with the first non-white space character
-        token = new Token(TokenType.unknown, null);
-
-        if (String.valueOf(input.charAt(index)).matches("[a-zA-Z]")) {
-            processWordToken();
-        } else if (String.valueOf(input.charAt(index)).matches("[0-9]")) {
-            processNumberToken();
-        } else if (String.valueOf(input.charAt(index)).matches("[/<>:]")) {
-            processDoubleToken();
-        } else if (input.charAt(index) == '"') {
-            processStringLiteral();
-        } else {
-            processSingleToken();
-        }
-
-        return token;
+        // we readLine returns null, we've found end of file token
+        token = new Token(TokenType.eof, "");
+        tokenList.add(token);
     }
 
+    /**
+     * Remote the comment section from the input stream before gettoken takes over
+     * @param str input source line
+     * @return
+     */
     private String removeComments(String str) {
         StringBuilder stringBuilder = new StringBuilder();
         int location = str.indexOf("--");
@@ -75,6 +89,9 @@ public class Lexer {
         return str;
     }
 
+    /**
+     * This function process string literal
+     */
     private static void processStringLiteral() {
         token.setTokenType(TokenType.string);
         StringBuilder stringBuilder = new StringBuilder();
@@ -112,6 +129,9 @@ public class Lexer {
 
     }
 
+    /**
+     * This function process double token
+     */
     private static void processDoubleToken(){
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -130,15 +150,23 @@ public class Lexer {
                 else
                     token.setTokenType(TokenType.relop);
 
+            } else if (input.charAt(index+1) == '-') {
+                index = input.length();
+                token = null;
+                return;
             } else {
                 processSingleToken();
             }
+            // if the try catch section throws an error, it's most likely String IndexOutofBound. This confirms that we have a single token
         } catch (StringIndexOutOfBoundsException e) {
             processSingleToken();
         }
 
     }
 
+    /**
+     * This function process single token
+     */
     private static void processSingleToken() {
         char lexeme =  input.charAt(index);
         token.setLexeme(Character.toString(lexeme));
@@ -194,6 +222,9 @@ public class Lexer {
         index++;
     }
 
+    /**
+     * This function process Word Token, some operator and reserver word token
+     */
     public static void processWordToken(){
         int length = 1;
         StringBuilder stringBuilder = new StringBuilder();
@@ -209,7 +240,7 @@ public class Lexer {
             stringBuilder.append(currentChar);
 
             index++;
-            if(index == input.length()) {
+            if(index == input.length()) { // we've reached the end of line
                 break;
             }else{
                 currentChar = input.charAt(index);
@@ -237,6 +268,9 @@ public class Lexer {
         }
     }
 
+    /**
+     * This function process number token
+     */
     public static void processNumberToken(){
         StringBuilder stringBuilder = new StringBuilder();
 
