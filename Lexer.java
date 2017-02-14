@@ -276,13 +276,10 @@ public class Lexer {
 
         char currentChar = input.charAt(index);
 
-        token.setTokenType(TokenType.inum);
+        token.setTokenType(TokenType.num);
 
         while(String.valueOf(currentChar).matches("[0-9.?]")){
             stringBuilder.append(currentChar);
-
-            if(currentChar == '.')
-                token.setTokenType(TokenType.rnum);
 
             // exit parsing, Error : no number after decimal point
             try {
@@ -311,10 +308,10 @@ public class Lexer {
         String lexeme = stringBuilder.toString();
         token.setLexeme(lexeme);
         try {
-            if (token.getTokenType() == TokenType.inum) {
-                token.setValue(Integer.valueOf(lexeme));
-            } else if (token.getTokenType() == TokenType.rnum) {
+            if (lexeme.contains(".")) {
                 token.setValueR(Float.valueOf(lexeme));
+            } else {
+                token.setValue(Integer.valueOf(lexeme));
             }
         } catch (UnsupportedValue e){
             System.out.println("Internal error : Trying to assign numeric value to unsupported token.");

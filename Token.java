@@ -31,31 +31,25 @@ public class Token {
     }
 
     public int getValue() throws UnsupportedValue{
-        if(tokenType == TokenType.inum)
+        if(tokenType == TokenType.num)
             return value;
         else
             throw new UnsupportedValue();
     }
 
     public void setValue(int value) throws UnsupportedValue {
-        if(tokenType == TokenType.inum)
+        if(tokenType == TokenType.num)
             this.value = value;
         else
             throw new UnsupportedValue();
     }
 
     public float getValueR() throws UnsupportedValue {
-        if(tokenType == TokenType.rnum)
             return valueR;
-        else
-            throw new UnsupportedValue();
     }
 
     public void setValueR(float valueR) throws UnsupportedValue {
-        if(tokenType == TokenType.rnum)
             this.valueR = valueR;
-        else
-            throw new UnsupportedValue();
     }
 
     public String getLiteral() throws UnsupportedValue {
@@ -81,15 +75,15 @@ public class Token {
         String formattedString;
         String tokenTypeT = tokenType.name().concat("t");
 
-        if(tokenType == TokenType.inum){
-            formattedString = String.format("%-20s %-25s %-20s", tokenTypeT, lexeme, value );
-            return formattedString;
-        }
-        else if(tokenType == TokenType.rnum) {
-            formattedString = String.format("%-20s %-25s %-20s", tokenTypeT, lexeme, valueR );
-            return formattedString;
-        }
-        else if(tokenType == TokenType.string){
+        if(tokenType == TokenType.num) {
+            if (lexeme.contains(".")) {
+                formattedString = String.format("%-20s %-25s %-20s", tokenTypeT, lexeme, valueR);
+                return formattedString;
+            } else {
+                formattedString = String.format("%-20s %-25s %-20s", tokenTypeT, lexeme, value);
+                return formattedString;
+            }
+        } else if(tokenType == TokenType.string){
             formattedString = String.format("%-20s %-25s %-20s", tokenTypeT, lexeme, literal );
             return formattedString;
         }

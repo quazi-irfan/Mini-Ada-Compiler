@@ -7,8 +7,7 @@ public enum TokenType {
     ELSIF, WHILE, LOOP, FLOAT, INTEGER, CHAR, GET, PUT, END,
 
     id,
-    inum,
-    rnum,
+    num,
     string,
 
     relop, // = /= < <= > >=
