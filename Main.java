@@ -1,3 +1,4 @@
+import ParserPkg.Parser;
 import TokenizerPkg.*;
 
 import java.io.BufferedReader;
@@ -12,7 +13,7 @@ import java.io.InputStreamReader;
  */
 
 public class Main {
-    Token currentToken = new Token(TokenType.unknown, null, 0);
+    static Token currentToken = new Token(TokenType.unknown, null, 0);
 
     public static void main(String[] args) throws Exception{
         if(args.length < 1){
@@ -20,13 +21,15 @@ public class Main {
             return;
         }
 
-        Tokenizer tokenizer = new Tokenizer(args[0]);
-        System.out.println("Number of tokens " + tokenizer.getTokenList().size());
-        System.out.println("LineNumber          Tokens              Lexeme               Attributes");
-        for(int i=0; i<tokenizer.getTokenList().size(); ) {
-            System.out.println(tokenizer.getTokenList().get(i));
-            i++;
-        }
+        Parser parser = new Parser(args[0]);
+//        Tokenizer tokenizer = new Tokenizer(args[0]);
+//        System.out.println("Number of tokens " + tokenizer.getTokenList().size());
+//        System.out.println("LineNumber          Tokens              Lexeme               Attributes");
+//        for(int i=0; i<tokenizer.getTokenList().size(); ) {
+//            System.out.println(tokenizer.getTokenList().get(i));
+//            i++;
+//        }
+
 
     }
 

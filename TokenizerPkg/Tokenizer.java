@@ -10,12 +10,14 @@ import java.util.List;
  * TokenizerPkg.Tokenizer Class
  */
 public class Tokenizer {
+    private int currentTokenIndex = 0;
     private int lineNumber = 1; // even in an empty time the eof token will be at line 1
     private static int index;
     private static String input = null;
     private static Token token = new Token(TokenType.unknown, null, 0);
     private static BufferedReader reader = null;
     private List<Token> tokenList = new ArrayList<>();
+    private Token nextToken;
 
     public Tokenizer(String fileName)throws IOException{
         // parse the source input file and enlist all available tokens in the TokenList
@@ -325,5 +327,9 @@ public class Tokenizer {
 
     public List<Token> getTokenList(){
         return tokenList;
+    }
+
+    public Token getNextToken() {
+        return tokenList.get(currentTokenIndex++);
     }
 }
