@@ -20,11 +20,11 @@ public class Main {
             return;
         }
 
-        Tokenizer scanner = new Tokenizer(args[0]);
-        System.out.println("Number of tokens " + scanner.getTokenList().size());
+        Tokenizer tokenizer = new Tokenizer(args[0]);
+        System.out.println("Number of tokens " + tokenizer.getTokenList().size());
         System.out.println("LineNumber          Tokens              Lexeme               Attributes");
-        for(int i=0; i<scanner.getTokenList().size(); ) {
-            System.out.println(scanner.getTokenList().get(i));
+        for(int i=0; i<tokenizer.getTokenList().size(); ) {
+            System.out.println(tokenizer.getTokenList().get(i));
             i++;
         }
 
