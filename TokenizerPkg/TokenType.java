@@ -1,4 +1,4 @@
-package ScannerPkg;
+package TokenizerPkg;
 
 /**
  * This euum class holds type of tokens we can detect

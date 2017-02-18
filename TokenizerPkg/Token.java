@@ -1,7 +1,7 @@
-package ScannerPkg;
+package TokenizerPkg;
 
 /**
- * ScannerPkg.Token classs represents an instance of a token
+ * TokenizerPkg.Token classs represents an instance of a token
  */
 public class Token {
     private TokenType tokenType;

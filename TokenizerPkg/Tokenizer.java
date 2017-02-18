@@ -1,4 +1,4 @@
-package ScannerPkg;
+package TokenizerPkg;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ScannerPkg.Scanner Class
+ * TokenizerPkg.Tokenizer Class
  */
-public class Scanner {
+public class Tokenizer {
     private int lineNumber = 1; // even in an empty time the eof token will be at line 1
     private static int index;
     private static String input = null;
@@ -17,7 +17,7 @@ public class Scanner {
     private static BufferedReader reader = null;
     private List<Token> tokenList = new ArrayList<>();
 
-    public Scanner(String fileName)throws IOException{
+    public Tokenizer(String fileName)throws IOException{
         // parse the source input file and enlist all available tokens in the TokenList
         reader = new BufferedReader(new FileReader(fileName));
         input = reader.readLine();
@@ -69,7 +69,7 @@ public class Scanner {
     }
 
     /**
-     * This function process Word ScannerPkg.Token, some operator and reserver word token
+     * This function process Word TokenizerPkg.Token, some operator and reserver word token
      */
     public void processWordToken(){
         StringBuilder stringBuilder = new StringBuilder();
