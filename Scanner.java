@@ -8,6 +8,7 @@ import java.util.List;
  * Scanner Class
  */
 public class Scanner {
+    private int lineNumber = 1; // even in an empty time the eof token will be at line 1
     private static int index = 0;
     private static String input = null;
     private static Token token = new Token(TokenType.unknown, null);
@@ -54,17 +55,18 @@ public class Scanner {
             }
 
             input = reader.readLine();
+            lineNumber++;
         }
 
         // we readLine returns null, we've found end of file token
-        token = new Token(TokenType.eof, "");
+        token = new Token(TokenType.eof, "", lineNumber);
         tokenList.add(token);
     }
 
     /**
      * This function process Word Token, some operator and reserver word token
      */
-    public static void processWordToken(){
+    public void processWordToken(){
         StringBuilder stringBuilder = new StringBuilder();
         char currentChar = input.charAt(index);
 
@@ -74,7 +76,7 @@ public class Scanner {
         while(String.valueOf(currentChar).matches("[a-zA-Z0-9_]")){
             // if the length of the word token is greater then 17, we've encountered an error, and we exit the function
             if(length > 17){
-                token = new Token(TokenType.unknown, "Error too long id token " + stringBuilder.toString());
+                token = new Token(TokenType.unknown, "Error too long id token " + stringBuilder.toString(), lineNumber);
                 return;
             }
 
@@ -98,6 +100,7 @@ public class Scanner {
         // valid word token found, now populate a token object
         String lexeme = stringBuilder.toString().toUpperCase();
         token.setLexeme(lexeme);
+        token.setLineNumber(lineNumber);
 
         // if the word token is a REM, MOD or AND, it's a multiplication operator token
         if(lexeme.equals("REM") || lexeme.equals("MOD") || lexeme.equals("AND")){
@@ -127,7 +130,7 @@ public class Scanner {
     /**
      * This function process number token
      */
-    public static void processNumberToken(){
+    public void processNumberToken(){
         StringBuilder stringBuilder = new StringBuilder();
         char currentChar = input.charAt(index);
 
@@ -137,14 +140,14 @@ public class Scanner {
             // check if current character is . we need another number following it, or it's an error in number token
             try {
                 if(currentChar == '.' && !String.valueOf(input.charAt(index+1)).matches("[0-9]")){
-                    token = new Token(TokenType.unknown, "Error no number after decimal point " + stringBuilder.toString());
+                    token = new Token(TokenType.unknown, "Error no number after decimal point " + stringBuilder.toString(), lineNumber);
                     index++;    // consume the . character
                     return;
                 }
             }
             // if exception is thrown, there is no more character in that line after . character, so it's a malformed number token
             catch (StringIndexOutOfBoundsException e){
-                token = new Token(TokenType.unknown, "Error no number after decimal point " + stringBuilder.toString());
+                token = new Token(TokenType.unknown, "Error no number after decimal point " + stringBuilder.toString(), lineNumber);
                 index++;    // consume the . character
                 return;
             }
@@ -164,6 +167,7 @@ public class Scanner {
         String lexeme = stringBuilder.toString();
         token.setTokenType(TokenType.num);
         token.setLexeme(lexeme);
+        token.setLineNumber(lineNumber);
 
         // todo : replace setValue setValueR with setAttribute
         if (lexeme.contains(".")) {
@@ -176,7 +180,7 @@ public class Scanner {
     /**
      * This function process string literal
      */
-    private static void processStringLiteral() {
+    private void processStringLiteral() {
         StringBuilder stringBuilder = new StringBuilder();
         token.setTokenType(TokenType.string);
 
@@ -188,7 +192,7 @@ public class Scanner {
 
             // We have reached the end of file
             if(index >= input.length()){
-                token = new Token(TokenType.unknown, "Error missing string literal termination character " + stringBuilder.toString());
+                token = new Token(TokenType.unknown, "Error missing string literal termination character " + stringBuilder.toString(), lineNumber);
                 return;
             }
         }while(input.charAt(index) != '"');
@@ -201,6 +205,7 @@ public class Scanner {
 
         String lexeme = stringBuilder.toString();
         token.setLexeme(lexeme);
+        token.setLineNumber(lineNumber);
 
         String literal = lexeme.substring(1, lexeme.length()-1);
         token.setLiteral(literal);
@@ -209,7 +214,7 @@ public class Scanner {
     /**
      * This function process double token
      */
-    private static void processDoubleToken(){
+    private void processDoubleToken(){
         StringBuilder stringBuilder = new StringBuilder();
 
         // the first character is one from the list [/<>:-]
@@ -224,6 +229,7 @@ public class Scanner {
 
                 String lexeme = stringBuilder.toString();
                 token.setLexeme(lexeme);
+                token.setLineNumber(lineNumber);
 
                 // /= <= >= are relational operator
                 if(lexeme.equals(":="))
@@ -257,9 +263,10 @@ public class Scanner {
     /**
      * This function process single token
      */
-    private static void processSingleToken() {
+    private void processSingleToken() {
         char lexeme =  input.charAt(index);
         token.setLexeme(Character.toString(lexeme));
+        token.setLineNumber(lineNumber);
 
         switch(input.charAt(index)) {
             case '(':
@@ -302,9 +309,8 @@ public class Scanner {
                 token.setTokenType(TokenType.mulop);
                 break;
             default:
-                // unkonwn single character token
-                token.setTokenType(TokenType.unknown);
-                token.setLexeme(Character.toString(lexeme));
+                // unknown single character token
+                token = new Token(TokenType.unknown, Character.toString(lexeme), lineNumber);
                 break;
         }
 

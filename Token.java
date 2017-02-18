@@ -7,11 +7,18 @@ public class Token {
     private int value;
     private float valueR;
     private String literal;
+    private int lineNumber;
 
     // Constructor
     public Token(TokenType tokenType, String lexeme) {
         this.tokenType = tokenType;
         this.lexeme = lexeme;
+    }
+
+    public Token(TokenType tokenType, String lexeme, int lineNumber) {
+        this.tokenType = tokenType;
+        this.lexeme = lexeme;
+        this.lineNumber = lineNumber;
     }
 
     public TokenType getTokenType() {
@@ -54,6 +61,14 @@ public class Token {
         this.literal = literal;
     }
 
+    public void setLineNumber(int lineNumber){
+        this.lineNumber = lineNumber;
+    }
+
+    public int getLineNumber(){
+        return this.lineNumber;
+    }
+
     public void setAttribute(Number attribute){
         if (lexeme.contains(".")) {
             valueR = Float.valueOf(lexeme);
@@ -89,18 +104,18 @@ public class Token {
 
         if(tokenType == TokenType.num) {
             if (lexeme.contains(".")) {
-                formattedString = String.format("%-20s %-25s %-20s", tokenTypeT, lexeme, valueR);
+                formattedString = String.format("%-20s %-20s %-25s %-20s", lineNumber, tokenTypeT, lexeme, valueR);
                 return formattedString;
             } else {
-                formattedString = String.format("%-20s %-25s %-20s", tokenTypeT, lexeme, value);
+                formattedString = String.format("%-20s %-20s %-25s %-20s", lineNumber, tokenTypeT, lexeme, value);
                 return formattedString;
             }
         } else if(tokenType == TokenType.string){
-            formattedString = String.format("%-20s %-25s %-20s", tokenTypeT, lexeme, literal );
+            formattedString = String.format("%-20s %-20s %-25s %-20s", lineNumber, tokenTypeT, lexeme, literal );
             return formattedString;
         }
         else{
-            formattedString = String.format("%-20s %-25s", tokenTypeT, lexeme );
+            formattedString = String.format("%-20s %-20s %-25s", lineNumber, tokenTypeT, lexeme );
             return formattedString;
         }
     }

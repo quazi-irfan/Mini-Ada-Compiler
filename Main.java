@@ -19,7 +19,7 @@ public class Main {
         // starts the main loop
         Scanner scanner = new Scanner(args[0]);
         System.out.println("Number of tokens " + scanner.getTokenList().size());
-        System.out.println("Tokens              Lexeme               Attributes");
+        System.out.println("LineNumber          Tokens              Lexeme               Attributes");
         for(int i=0; i<scanner.getTokenList().size(); ) {
             System.out.println(scanner.getTokenList().get(i));
             i++;
