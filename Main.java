@@ -17,15 +17,15 @@ public class Main {
         }
 
         // starts the main loop
-        Lexer lexer = new Lexer(args[0]);
-        System.out.println("Number of tokens " + lexer.tokenList.size());
+        Scanner scanner = new Scanner(args[0]);
+        System.out.println("Number of tokens " + scanner.getTokenList().size());
         System.out.println("Tokens              Lexeme               Attributes");
-        for(int i=0; i<lexer.tokenList.size(); ) {
-            System.out.println(lexer.tokenList.get(i));
+        for(int i=0; i<scanner.getTokenList().size(); ) {
+            System.out.println(scanner.getTokenList().get(i));
             i++;
             // break in output
-            if (i % 10 == 0)
-                enterToContinue();
+//            if (i % 10 == 0)
+//                enterToContinue();
         }
 
     }

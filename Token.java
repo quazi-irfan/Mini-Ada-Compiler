@@ -30,40 +30,52 @@ public class Token {
         this.lexeme = lexeme;
     }
 
-    public int getValue() throws UnsupportedValue{
-        if(tokenType == TokenType.num)
-            return value;
-        else
-            throw new UnsupportedValue();
+    public int getValue() {
+        return value;
     }
 
-    public void setValue(int value) throws UnsupportedValue {
-        if(tokenType == TokenType.num)
-            this.value = value;
-        else
-            throw new UnsupportedValue();
+    public void setValue(int value) {
+        this.value = value;
     }
 
-    public float getValueR() throws UnsupportedValue {
+    public float getValueR() {
             return valueR;
     }
 
-    public void setValueR(float valueR) throws UnsupportedValue {
+    public void setValueR(float valueR)  {
             this.valueR = valueR;
     }
 
-    public String getLiteral() throws UnsupportedValue {
-        if(tokenType == TokenType.string)
-            return literal;
-        else
-            throw new UnsupportedValue();
+    public String getLiteral(){
+        return literal;
     }
 
-    public void setLiteral(String literal) throws UnsupportedValue {
-        if(tokenType == TokenType.string)
-            this.literal = literal;
-        else
-            throw new UnsupportedValue();
+    public void setLiteral(String literal) {
+        this.literal = literal;
+    }
+
+    public void setAttribute(Number attribute){
+        if (lexeme.contains(".")) {
+            valueR = Float.valueOf(lexeme);
+        } else {
+            value = Integer.valueOf(lexeme);
+        }
+    }
+
+    public void setAttribute(String attribute){
+        literal = attribute;
+    }
+
+    public Object getAttribute(){
+        if(tokenType == TokenType.num){
+            if(lexeme.contains(".")){
+                return valueR;
+            } else {
+                return value;
+            }
+        } else {
+            return literal;
+        }
     }
 
     /**
