@@ -1,3 +1,5 @@
+package ScannerPkg;
+
 /**
  * This euum class holds type of tokens we can detect
  */

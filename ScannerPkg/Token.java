@@ -1,5 +1,7 @@
+package ScannerPkg;
+
 /**
- * Token classs represents an instance of a token
+ * ScannerPkg.Token classs represents an instance of a token
  */
 public class Token {
     private TokenType tokenType;
@@ -10,11 +12,6 @@ public class Token {
     private int lineNumber;
 
     // Constructor
-    public Token(TokenType tokenType, String lexeme) {
-        this.tokenType = tokenType;
-        this.lexeme = lexeme;
-    }
-
     public Token(TokenType tokenType, String lexeme, int lineNumber) {
         this.tokenType = tokenType;
         this.lexeme = lexeme;

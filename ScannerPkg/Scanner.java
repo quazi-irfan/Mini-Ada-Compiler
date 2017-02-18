@@ -1,3 +1,5 @@
+package ScannerPkg;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -5,13 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Scanner Class
+ * ScannerPkg.Scanner Class
  */
 public class Scanner {
     private int lineNumber = 1; // even in an empty time the eof token will be at line 1
-    private static int index = 0;
+    private static int index;
     private static String input = null;
-    private static Token token = new Token(TokenType.unknown, null);
+    private static Token token = new Token(TokenType.unknown, null, 0);
     private static BufferedReader reader = null;
     private List<Token> tokenList = new ArrayList<>();
 
@@ -37,7 +39,7 @@ public class Scanner {
                 }
 
                 // set the current token to unknown before we start parsing
-                token = new Token(TokenType.unknown, null);
+                token = new Token(TokenType.unknown, null, 0);
                 if (String.valueOf(input.charAt(index)).matches("[a-zA-Z]")) {
                     processWordToken();
                 } else if (String.valueOf(input.charAt(index)).matches("[0-9]")) {
@@ -55,16 +57,19 @@ public class Scanner {
             }
 
             input = reader.readLine();
-            lineNumber++;
+
+            // we check for null, otherwise the line number of eof token will be bumped one more
+            if(input != null)
+                lineNumber++;
         }
 
-        // we readLine returns null, we've found end of file token
+        // when readLine returns null, we are at the end of file
         token = new Token(TokenType.eof, "", lineNumber);
         tokenList.add(token);
     }
 
     /**
-     * This function process Word Token, some operator and reserver word token
+     * This function process Word ScannerPkg.Token, some operator and reserver word token
      */
     public void processWordToken(){
         StringBuilder stringBuilder = new StringBuilder();
