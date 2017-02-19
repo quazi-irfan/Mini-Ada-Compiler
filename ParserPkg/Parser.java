@@ -100,6 +100,9 @@ public class Parser {
             currentToken = tokenizer.getNextToken();
             match(currentToken, TokenType.assignop);
             Value();
+        } else {
+            System.out.println("At line number " + currentToken.getLineNumber() + ", expecting integer/float/char/const , but found " + currentToken.getTokenType() + " token with lexeme " + currentToken.getLexeme());
+            System.exit(1);
         }
     }
 
