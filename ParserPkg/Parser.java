@@ -5,8 +5,8 @@ import TokenizerPkg.*;
 import java.io.IOException;
 
 public class Parser {
-    Tokenizer tokenizer;
-    Token currentToken;
+    private Tokenizer tokenizer;
+    private Token currentToken;
 
     public Parser(String fileName) throws IOException {
         tokenizer = new Tokenizer(fileName);
@@ -15,10 +15,13 @@ public class Parser {
         // initialize parsing
         Prog();
 
-        if(currentToken.getTokenType() == TokenType.eof)
+        if(currentToken.getTokenType() != TokenType.eof) {
+            System.out.println("At line number " + currentToken.getLineNumber() + " unused token(" + currentToken.getTokenType() + ", " + currentToken.getLexeme() + ") found. Expecting End of File token.");
+            System.exit(1);
+        }
+        else {
             System.out.println("Parsing successful.");
-        else
-            System.out.println("Error : Unused tokens");
+        }
     }
 
     //Prog	->	procedure idt Args is DeclarativePart Procedures begin SeqOfStatements end idt;
