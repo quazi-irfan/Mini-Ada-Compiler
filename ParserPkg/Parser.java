@@ -7,6 +7,7 @@ import java.io.IOException;
 public class Parser {
     private Tokenizer tokenizer;
     private Token currentToken;
+    private boolean isParsingSuccessful;
 
     public Parser(String fileName) throws IOException {
         tokenizer = new Tokenizer(fileName);
@@ -20,11 +21,11 @@ public class Parser {
             System.exit(1);
         }
         else {
-            System.out.println("Parsing successful.");
+            isParsingSuccessful = true;
         }
     }
 
-    //Prog	->	procedure idt Args is DeclarativePart Procedures begin SeqOfStatements end idt;
+    // This function implements Prog	->	procedure idt Args is DeclarativePart Procedures begin SeqOfStatements end idt;
     private void Prog(){
         match(currentToken, TokenType.PROCEDURE);
         match(currentToken, TokenType.id);
@@ -39,12 +40,12 @@ public class Parser {
         match(currentToken, TokenType.semicolon);
     }
 
-    // SeqOfStatments	->	E
+    // This function implements  SeqOfStatments	->	E
     private void SeqOfStatements() {
         return;
     }
 
-    // Procedures  -> 	Prog Procedures | E
+    // This function implements  Procedures  -> 	Prog Procedures | E
     private void Procedures() {
         if(currentToken.getTokenType() == TokenType.PROCEDURE){ // we do not use "currentToken = tokenizer.getNextToken()" here, since we are doing a look ahead
             Prog();
@@ -53,7 +54,7 @@ public class Parser {
         // else empty statement
     }
 
-    // DeclarativePart	->	IdentifierList : TypeMark ; DeclarativePart | E
+    // This function implements  DeclarativePart	->	IdentifierList : TypeMark ; DeclarativePart | E
     private void DeclarativePart() {
         if(currentToken.getTokenType() == TokenType.id){ // we do not use "currentToken = tokenizer.getNextToken()" here, since we are doing a look ahead
             IdentifierList();
@@ -65,7 +66,7 @@ public class Parser {
         // else empty production
     }
 
-    // Args	->	( ArgList ) | E
+    // This function implements  Args	->	( ArgList ) | E
     private void Args() {
         if(optionalMatch(currentToken, TokenType.lparen)) {
             currentToken = tokenizer.getNextToken();
@@ -75,7 +76,7 @@ public class Parser {
         // else empty production
     }
 
-    // ArgList	-> 	Mode IdentifierList : TypeMark MoreArgs
+    // This function implements  ArgList	-> 	Mode IdentifierList : TypeMark MoreArgs
     private void ArgList() {
         Mode();
         IdentifierList();
@@ -84,7 +85,7 @@ public class Parser {
         MoreArgs();
     }
 
-    //MoreArgs	-> 	; ArgList | E
+    // This function implements MoreArgs	-> 	; ArgList | E
     private void MoreArgs() {
         if(currentToken.getTokenType() == TokenType.semicolon){
             currentToken = tokenizer.getNextToken();
@@ -93,7 +94,7 @@ public class Parser {
         // else empty production
     }
 
-    // TypeMark	->	integert | realt | chart | const assignop Value
+    // This function implements  TypeMark	->	integert | realt | chart | const assignop Value
     private void TypeMark() {
         if(currentToken.getTokenType() == TokenType.INTEGER |
                 currentToken.getTokenType() == TokenType.FLOAT |
@@ -109,12 +110,12 @@ public class Parser {
         }
     }
 
-    // Value ->	NumericalLiteral
+    // This function implements  Value ->	NumericalLiteral
     private void Value() {
         match(currentToken,TokenType.num);
     }
 
-    //Mode	->	in | out | inout | E
+    // This function implements Mode	->	in | out | inout | E
     private void Mode() {
         // todo ask if it's correct
         if(currentToken.getLexeme().equals("IN") | currentToken.getLexeme().equals("OUT") | currentToken.getLexeme().equals("INOUT")) {
@@ -124,13 +125,13 @@ public class Parser {
         // else empty production
     }
 
-    // IdentifierList  -> 	idt IdentifierList`
+    // This function implements  IdentifierList  -> 	idt IdentifierList`
     private void IdentifierList() {
         match(currentToken, TokenType.id);
         IdentifierList_();
     }
 
-    // IdentifierList`	->	,idt IdentifierList` | E
+    // This function implements  IdentifierList`	->	,idt IdentifierList` | E
     private void IdentifierList_() {
         if(optionalMatch(currentToken, TokenType.comma)){
             currentToken = tokenizer.getNextToken();
@@ -166,6 +167,10 @@ public class Parser {
      */
     private boolean optionalMatch(Token localCurrentToken, TokenType desiredToken) {
         return (localCurrentToken.getTokenType() == desiredToken);
+    }
+
+    public boolean isParsingSuccessful(){
+        return isParsingSuccessful;
     }
 }
 
