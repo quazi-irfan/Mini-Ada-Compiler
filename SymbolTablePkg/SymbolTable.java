@@ -1,7 +1,5 @@
 package SymbolTablePkg;
 
-import TokenizerPkg.TokenType;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -46,20 +44,16 @@ public class SymbolTable {
     /**
      * Insert a symbol into the symbol table.
      * @param lexeme_ lexeme_ of the symbol
-     * @param tokenType_ tokentype of the symbol
      * @param depth_ depth_ of the symbol
      */
-    public void insert(String lexeme_, TokenType tokenType_, int depth_){
+    public void insert(String lexeme_, ESymbolType symbolType_, int depth_){
         if(depth_ < CurrentDepth){
             System.out.println("Only allowed to insert at depth " + CurrentDepth);
             System.exit(0);
         }
 
         // generate the symbol
-        Symbol symbol = new Symbol();
-        symbol.lexeme = lexeme_;
-        symbol.tokenType = tokenType_;
-        symbol.depth = depth_;
+        Symbol symbol = new Symbol(lexeme_, symbolType_, depth_);
 
         // insert it to the hash table
         int index = hash(lexeme_);
@@ -86,7 +80,7 @@ public class SymbolTable {
                 for(int j = 0; j<linkedList.size(); j++){
                     Symbol symbol = linkedList.get(j);
                     if(symbol.depth == depth_)
-                        System.out.println("Lexeme " + symbol.lexeme + ",Token type " + symbol.type + " ,Depth " + symbol.depth);
+                        System.out.println("Lexeme " + symbol.lexeme + ", SymbolType " + symbol.symbolType + " ,Depth " + symbol.depth);
                 }
             }
         }

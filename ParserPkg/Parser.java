@@ -1,17 +1,53 @@
 package ParserPkg;
 
+import SymbolTablePkg.SymbolTable;
 import TokenizerPkg.*;
 
 import java.io.IOException;
+
+/* Our grammar
+ Prog			->	procedure idt Args is
+                    DeclarativePart
+                    Procedures
+                    begin
+                    SeqOfStatements
+                    end idt;
+
+ DeclarativePart	->	IdentifierList : TypeMark ; DeclarativePart | ε
+
+ IdentifierList		->	idt |
+                        IdentifierList , idt
+
+ TypeMark		->	integert | realt | chart | const assignop Value
+
+ Value			->	NumericalLiteral
+
+ Procedures		-> 	Prog Procedures | ε
+
+ Args			->	( ArgList ) | ε
+
+ ArgList		-> 	Mode IdentifierList : TypeMark MoreArgs
+
+ MoreArgs		-> 	; ArgList | ε
+
+ Mode			->	in | out | inout | ε
+
+ SeqOfStatments	->	ε
+
+ */
 
 public class Parser {
     private Tokenizer tokenizer;
     private Token currentToken;
     private boolean isParsingSuccessful;
+    private SymbolTable _symbolTable;
 
     public Parser(String fileName) throws IOException {
         tokenizer = new Tokenizer(fileName);
         currentToken = tokenizer.getNextToken();
+
+        // initialize symbol table before parsing
+        _symbolTable = new SymbolTable();
 
         // initialize parsing
         Prog();
@@ -147,7 +183,6 @@ public class Parser {
      * @param localCurrentToken Current token
      * @param desiredToken The token type we are looking for
      */
-
     private void match(Token localCurrentToken, TokenType desiredToken) {
         if(localCurrentToken.getTokenType() != desiredToken){
             System.out.println("At line number " + currentToken.getLineNumber() + ", expecting " + desiredToken + " token, but found " + currentToken.getTokenType() + " token with lexeme " + currentToken.getLexeme());

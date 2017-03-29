@@ -1,6 +1,6 @@
 package SymbolTablePkg;
 
-// enum that holds mode the entry type in the symbol table
+// Symbol Type enum
 public enum ESymbolType {
     variable, constant, function;
 }

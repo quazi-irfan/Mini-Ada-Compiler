@@ -1,7 +1,5 @@
 package SymbolTablePkg;
 
-import TokenizerPkg.TokenType;
-
 import java.util.LinkedList;
 
 /**
@@ -9,15 +7,20 @@ import java.util.LinkedList;
  */
 public class Symbol {
     // common attributes of a symbol
-    public TokenType tokenType;
     public int depth;
     public String lexeme;
-    public ESymbolType type;
+    public ESymbolType symbolType;
 
     // attributes of a symbol
     public VariableAttributes variableAttributes;
     public ConstantAttributes constantAttributes;
     public FunctionAttributes functionAttributes;
+
+    public Symbol(String lexeme, ESymbolType symbolType, int depth) {
+        this.lexeme = lexeme;
+        this.symbolType = symbolType;
+        this.depth = depth;
+    }
 
     // attribute of variables
     private class VariableAttributes {
@@ -43,18 +46,18 @@ public class Symbol {
         public LinkedList<EParameterModeType> parameterModeList;
     }
 
-    // getter and setter to set and get the type of the symbol table
-    public void setType(ESymbolType type_) {
-        this.type = type_;
-        if(this.type == ESymbolType.variable)
+    // getter and setter to set and get the symbolType of the symbol table
+    public void setSymbolType(ESymbolType type_) {
+        this.symbolType = type_;
+        if(this.symbolType == ESymbolType.variable)
             variableAttributes = new VariableAttributes();
-        else if(this.type == ESymbolType.constant)
+        else if(this.symbolType == ESymbolType.constant)
             constantAttributes = new ConstantAttributes();
         else
             functionAttributes = new FunctionAttributes();
     }
 
-    public ESymbolType getType(){
+    public ESymbolType getSymbolType(){
         if(variableAttributes != null)
             return ESymbolType.variable;
         else if(constantAttributes != null)

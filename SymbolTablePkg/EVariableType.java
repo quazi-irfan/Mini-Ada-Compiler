@@ -1,6 +1,6 @@
 package SymbolTablePkg;
 
-// enum that hold the type variable
+// variable type enum
 public enum EVariableType {
     integerType, characterType, floatType;
 }

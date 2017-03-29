@@ -12,9 +12,9 @@ import TokenizerPkg.TokenType;
  */
 public class Main {
     public static void main(String[] args) throws Exception{
-        SymbolTable st = new SymbolTable();
-        st.insert("abc", TokenType.id, 1);
-        Symbol symbol = st.lookup("abc");
+        SymbolTable symbolTable = new SymbolTable();
+        symbolTable.insert("abc", ESymbolType.constant, 1);
+        Symbol symbol = symbolTable.lookup("abc");
         System.out.println(symbol.depth);
     }
 }
