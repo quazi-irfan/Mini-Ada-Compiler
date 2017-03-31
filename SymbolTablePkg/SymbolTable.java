@@ -46,14 +46,14 @@ public class SymbolTable {
      * @param lexeme_ lexeme_ of the symbol
      * @param depth_ depth_ of the symbol
      */
-    public void insert(String lexeme_, ESymbolType symbolType_, int depth_){
+    public Symbol insert(String lexeme_, int depth_){
         if(depth_ < CurrentDepth){
             System.out.println("Only allowed to insert at depth " + CurrentDepth);
             System.exit(0);
         }
 
         // generate the symbol
-        Symbol symbol = new Symbol(lexeme_, symbolType_, depth_);
+        Symbol symbol = new Symbol(lexeme_, depth_);
 
         // insert it to the hash table
         int index = hash(lexeme_);
@@ -67,6 +67,7 @@ public class SymbolTable {
             linkedList.addFirst(symbol);
         }
 
+        return symbol;
     }
 
     /**
@@ -132,5 +133,12 @@ public class SymbolTable {
             }
         }
         return h % TableSize;
+    }
+
+    public Symbol insert(Symbol symbol_) {
+        if(symbol_ != null) {
+            return insert(symbol_.lexeme, symbol_.depth);
+        }
+        return null;
     }
 }

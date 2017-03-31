@@ -13,8 +13,9 @@ import TokenizerPkg.TokenType;
 public class Main {
     public static void main(String[] args) throws Exception{
         SymbolTable symbolTable = new SymbolTable();
-        symbolTable.insert("abc", ESymbolType.constant, 1);
+        symbolTable.insert("abc", 1);
         Symbol symbol = symbolTable.lookup("abc");
-        System.out.println(symbol.depth);
+        symbol.setSymbolType(ESymbolType.function);
+        symbolTable.printTable(1);
     }
 }

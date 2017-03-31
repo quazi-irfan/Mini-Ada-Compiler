@@ -6,19 +6,18 @@ import java.util.LinkedList;
  * Every instance of symbol class in an entry to the symbol table.
  */
 public class Symbol {
-    // common attributes of a symbol
+    // attributes initialized during constructor
     public int depth;
     public String lexeme;
-    public ESymbolType symbolType;
 
-    // attributes of a symbol
+    // attributes initialized later
+    public ESymbolType symbolType;
     public VariableAttributes variableAttributes;
     public ConstantAttributes constantAttributes;
     public FunctionAttributes functionAttributes;
 
-    public Symbol(String lexeme, ESymbolType symbolType, int depth) {
+    public Symbol(String lexeme, int depth) {
         this.lexeme = lexeme;
-        this.symbolType = symbolType;
         this.depth = depth;
     }
 
