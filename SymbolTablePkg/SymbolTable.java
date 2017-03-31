@@ -48,7 +48,7 @@ public class SymbolTable {
      */
     public Symbol insert(String lexeme_, int depth_){
         if(depth_ < CurrentDepth){
-            System.out.println("Only allowed to insert at depth " + CurrentDepth);
+            System.out.println("Error inserting '" + lexeme_ + "' ,only allowed to insert at depth " + CurrentDepth);
             System.exit(0);
         }
 
@@ -74,14 +74,14 @@ public class SymbolTable {
      * Print all symbols at current depth_.
      * @param depth_ the desired depth_
      */
-    public void printTable(int depth_){
+    public void printDepth(int depth_){
         for(int i = 0; i< TableSize; i++){
             LinkedList<Symbol> linkedList = _hashTable.get(i);
             if(linkedList != null){
                 for(int j = 0; j<linkedList.size(); j++){
                     Symbol symbol = linkedList.get(j);
                     if(symbol.depth == depth_)
-                        System.out.println("Lexeme " + symbol.lexeme + ", SymbolType " + symbol.symbolType + " ,Depth " + symbol.depth);
+                        System.out.println("Lexeme '" + symbol.lexeme + "', SymbolType " + symbol.symbolType + " ,Depth " + symbol.depth);
                 }
             }
         }
@@ -135,6 +135,11 @@ public class SymbolTable {
         return h % TableSize;
     }
 
+    /**
+     * Overloaded insert method
+     * @param symbol_ symbol to enter into the symbol table
+     * @return returns the inserted symbol. If a null symbol was passed the function would return null
+     */
     public Symbol insert(Symbol symbol_) {
         if(symbol_ != null) {
             return insert(symbol_.lexeme, symbol_.depth);

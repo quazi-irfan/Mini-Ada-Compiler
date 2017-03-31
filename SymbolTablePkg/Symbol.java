@@ -22,14 +22,14 @@ public class Symbol {
     }
 
     // attribute of variables
-    private class VariableAttributes {
+    public class VariableAttributes {
         public EVariableType typeOfVariable;
         public int offset;
         public int size;
     }
 
     // attribute of constants
-    private class ConstantAttributes {
+    public class ConstantAttributes {
         public EVariableType typeOfConstant;
         public int offset;
         public int value;
@@ -37,7 +37,7 @@ public class Symbol {
     }
 
     // attribute of function
-    private class FunctionAttributes {
+    public class FunctionAttributes {
         public int numberOfLocalVariable;
         public EVariableType returnType;
         public int numberOfParameter;
