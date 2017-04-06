@@ -87,7 +87,7 @@ public class Parser {
 
         match(currentToken, TokenType.END);
         if(!functionName.equalsIgnoreCase(currentToken.getLexeme())){
-            System.out.println("Error : Missing \"END " + functionName+";\"");
+            System.out.println("Error : Missing statement \"END " + functionName+";\"");
             System.exit(1);
         }
 
