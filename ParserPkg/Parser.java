@@ -39,13 +39,16 @@ import java.util.LinkedList;
  SeqOfStatments	->	ε
 
  */
-
+//          w:constant := 5;
+//        z:integer;
+//        a,b,c,d:float;
 public class Parser {
     private Tokenizer tokenizer;
     private Token currentToken;
     private boolean isParsingSuccessful;
     private SymbolTable _symbolTable;
     private LinkedList<Symbol> identifierList = new LinkedList<>();
+    private int localVariableOffset = 2;
 
     public Parser(String fileName) throws IOException {
         tokenizer = new Tokenizer(fileName);
@@ -141,7 +144,7 @@ public class Parser {
                 currentToken.getTokenType() == TokenType.FLOAT |
                 currentToken.getTokenType() == TokenType.CHAR){
 
-            int size, offset = 0;
+            int size;
             EVariableType type;
             if(currentToken.getTokenType() == TokenType.INTEGER) {
                 type = EVariableType.integerType;
@@ -158,18 +161,18 @@ public class Parser {
                 symbol.setSymbolType(ESymbolType.variable);
                 symbol.variableAttributes.typeOfVariable = type;
                 symbol.variableAttributes.size = size;
-                symbol.variableAttributes.offset = offset;
-                offset += size;
+                symbol.variableAttributes.offset = localVariableOffset;
+                localVariableOffset += size;
             }
-            identifierList.clear();
 
+            identifierList.clear();
             currentToken = tokenizer.getNextToken();
         } else if(currentToken.getTokenType() == TokenType.CONSTANT){
             currentToken = tokenizer.getNextToken();
             match(currentToken, TokenType.assignop);
             String numberStr = Value();
 
-            int size, offset = 0;
+            int size;
             EVariableType type;
             if(numberStr.indexOf('.') == -1){
                 type = EVariableType.integerType;
@@ -186,8 +189,8 @@ public class Parser {
                     symbol.constantAttributes.value = Integer.parseInt(numberStr);
                 else
                     symbol.constantAttributes.valueR = Float.parseFloat(numberStr);
-                symbol.constantAttributes.offset = offset;
-                offset += size;
+                symbol.constantAttributes.offset = localVariableOffset;
+                localVariableOffset += size;
             }
             identifierList.clear();
 
