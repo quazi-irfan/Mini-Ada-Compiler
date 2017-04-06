@@ -1,9 +1,13 @@
 package ParserPkg;
 
+import SymbolTablePkg.ESymbolType;
+import SymbolTablePkg.EVariableType;
+import SymbolTablePkg.Symbol;
 import SymbolTablePkg.SymbolTable;
 import TokenizerPkg.*;
 
 import java.io.IOException;
+import java.util.LinkedList;
 
 /* Our grammar
  Prog			->	procedure idt Args is
@@ -41,6 +45,7 @@ public class Parser {
     private Token currentToken;
     private boolean isParsingSuccessful;
     private SymbolTable _symbolTable;
+    private LinkedList<Symbol> identifierList = new LinkedList<>();
 
     public Parser(String fileName) throws IOException {
         tokenizer = new Tokenizer(fileName);
@@ -135,11 +140,57 @@ public class Parser {
         if(currentToken.getTokenType() == TokenType.INTEGER |
                 currentToken.getTokenType() == TokenType.FLOAT |
                 currentToken.getTokenType() == TokenType.CHAR){
+
+            int size, offset = 0;
+            EVariableType type;
+            if(currentToken.getTokenType() == TokenType.INTEGER) {
+                type = EVariableType.integerType;
+                size = 2;
+            } else if(currentToken.getTokenType() == TokenType.FLOAT) {
+                type = EVariableType.floatType;
+                size = 4;
+            }else {
+                type = EVariableType.characterType;
+                size = 1;
+            }
+
+            for(Symbol symbol : identifierList){
+                symbol.setSymbolType(ESymbolType.variable);
+                symbol.variableAttributes.typeOfVariable = type;
+                symbol.variableAttributes.size = size;
+                symbol.variableAttributes.offset = offset;
+                offset += size;
+            }
+            identifierList.clear();
+
             currentToken = tokenizer.getNextToken();
         } else if(currentToken.getTokenType() == TokenType.CONSTANT){
             currentToken = tokenizer.getNextToken();
             match(currentToken, TokenType.assignop);
-            Value();
+            String numberStr = Value();
+
+            int size, offset = 0;
+            EVariableType type;
+            if(numberStr.indexOf('.') == -1){
+                type = EVariableType.integerType;
+                size = 2;
+            } else {
+                type = EVariableType.floatType;
+                size = 4;
+            }
+
+            for(Symbol symbol : identifierList){
+                symbol.setSymbolType(ESymbolType.constant);
+                symbol.constantAttributes.typeOfConstant = type;
+                if(type == EVariableType.integerType)
+                    symbol.constantAttributes.value = Integer.parseInt(numberStr);
+                else
+                    symbol.constantAttributes.valueR = Float.parseFloat(numberStr);
+                symbol.constantAttributes.offset = offset;
+                offset += size;
+            }
+            identifierList.clear();
+
         } else {
             System.out.println("At line number " + currentToken.getLineNumber() + ", expecting integer/float/char/const , but found " + currentToken.getTokenType() + " token with lexeme " + currentToken.getLexeme());
             System.exit(1);
@@ -147,8 +198,10 @@ public class Parser {
     }
 
     // This function implements  Value ->	NumericalLiteral
-    private void Value() {
+    private String Value() {
+        String value = currentToken.getLexeme();
         match(currentToken,TokenType.num);
+        return value;
     }
 
     // This function implements Mode	->	in | out | inout | E
@@ -163,6 +216,7 @@ public class Parser {
 
     // This function implements  IdentifierList  -> 	idt IdentifierList`
     private void IdentifierList() {
+        identifierList.add(_symbolTable.insert(currentToken.getLexeme(), _symbolTable.CurrentDepth));
         match(currentToken, TokenType.id);
         IdentifierList_();
     }
@@ -171,6 +225,7 @@ public class Parser {
     private void IdentifierList_() {
         if(currentToken.getTokenType() == TokenType.comma){
             currentToken = tokenizer.getNextToken();
+            identifierList.add(_symbolTable.insert(currentToken.getLexeme(), _symbolTable.CurrentDepth));
             match(currentToken, TokenType.id);
             IdentifierList_();
         }
