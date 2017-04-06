@@ -41,6 +41,22 @@ public class SymbolTable {
         return null;
     }
 
+    public Symbol lookup(String lexeme_, ESymbolType desiredSymbolType_){
+        for(int i = 0; i< TableSize; i++){
+            LinkedList<Symbol> linkedList = _hashTable.get(i);
+            if(linkedList != null){
+                for(int j = 0; j<linkedList.size(); j++){
+                    Symbol symbol = linkedList.get(j);
+                    if(symbol.lexeme.equals(lexeme_) && symbol.getSymbolType().equals(desiredSymbolType_)){
+                        return symbol;
+                    }
+                }
+            }
+        }
+        // if symbol not found, return null.
+        return null;
+    }
+
     /**
      * Insert a symbol into the symbol table.
      * @param lexeme_ lexeme_ of the symbol
@@ -81,7 +97,7 @@ public class SymbolTable {
                 for(int j = 0; j<linkedList.size(); j++){
                     Symbol symbol = linkedList.get(j);
                     if(symbol.depth == depth_)
-                        System.out.println("Symbol: Lexeme '" + symbol.lexeme + "', SymbolType " + symbol.symbolType + " ,Depth " + symbol.depth +
+                        System.out.println("Symbol: Lexeme '" + symbol.lexeme + "', SymbolType " + symbol.symbolType + ", Depth " + symbol.depth +
                                 "\nAttributes of '" +symbol.lexeme + "': "  + symbol.getSymbolAttributes());
                 }
             }

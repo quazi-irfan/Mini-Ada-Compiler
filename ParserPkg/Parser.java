@@ -55,6 +55,9 @@ public class Parser {
         // initialize parsing
         Prog();
 
+        // print the symbol table of global space
+        _symbolTable.printDepth(_symbolTable.CurrentDepth);
+
         if(currentToken.getTokenType() != TokenType.eof) {
             System.out.println("At line number " + currentToken.getLineNumber() + " unused token(" + currentToken.getTokenType() + ", " + currentToken.getLexeme() + ") found. Expecting End of File token.");
             System.exit(1);
@@ -68,6 +71,7 @@ public class Parser {
     private void Prog(){
         match(currentToken, TokenType.PROCEDURE);
         String functionName = currentToken.getLexeme();
+        checkForDuplicateSymbol();
         _symbolTable.insert(functionName, _symbolTable.CurrentDepth).setSymbolType(ESymbolType.function);
         _symbolTable.CurrentDepth++;
         match(currentToken, TokenType.id);
@@ -86,7 +90,14 @@ public class Parser {
         match(currentToken, TokenType.semicolon);
         _symbolTable.printDepth(_symbolTable.CurrentDepth);
         _symbolTable.CurrentDepth--;
-        _symbolTable.printDepth(_symbolTable.CurrentDepth);
+    }
+
+    private void checkForDuplicateSymbol() {
+        Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
+        if(symbol != null && symbol.depth == _symbolTable.CurrentDepth){
+            System.out.println("Error : Duplicate symbol: '" +currentToken.getLexeme() + "'");
+            System.exit(1);
+        }
     }
 
     // This function implements  SeqOfStatments	->	E
@@ -143,93 +154,73 @@ public class Parser {
         }
     }
 
-//    private void TypeMark(){
-//        TypeMark(null);
-//    }
-
     // This function implements  TypeMark	->	integert | realt | chart | const assignop Value
     private void TypeMark(String functionName_, EParameterModeType parameterMode) {
         if(currentToken.getTokenType() == TokenType.INTEGER |
                 currentToken.getTokenType() == TokenType.FLOAT |
-                currentToken.getTokenType() == TokenType.CHAR){
+                currentToken.getTokenType() == TokenType.CHAR |
+                currentToken.getTokenType() == TokenType.CONSTANT){
 
-            int size;
-            EVariableType type;
-            if(currentToken.getTokenType() == TokenType.INTEGER) {
-                type = EVariableType.integerType;
-                size = 2;
-            } else if(currentToken.getTokenType() == TokenType.FLOAT) {
-                type = EVariableType.floatType;
-                size = 4;
-            }else {
-                type = EVariableType.characterType;
-                size = 1;
-            }
+            if(currentToken.getTokenType() == TokenType.INTEGER |
+                    currentToken.getTokenType() == TokenType.FLOAT |
+                    currentToken.getTokenType() == TokenType.CHAR){
 
-            for(Symbol symbol : identifierList){
-                if(symbol.getSymbolType() == null){
-                    symbol.setSymbolType(ESymbolType.variable);
-                    symbol.variableAttributes.typeOfVariable = type;
-                    symbol.variableAttributes.size = size;
-                    symbol.variableAttributes.offset = identifierOffset;
-                    identifierOffset += size;
+                int size;
+                EVariableType type;
+                if(currentToken.getTokenType() == TokenType.INTEGER) {
+                    type = EVariableType.integerType;
+                    size = 2;
+                } else if(currentToken.getTokenType() == TokenType.FLOAT) {
+                    type = EVariableType.floatType;
+                    size = 4;
+                }else {
+                    type = EVariableType.characterType;
+                    size = 1;
                 }
-            }
 
-            Symbol funcSymbol = _symbolTable.lookup(functionName_);
+                for(Symbol symbol : identifierList){
+                    if(symbol.getSymbolType() == null){
+                        symbol.setSymbolType(ESymbolType.variable);
+                        symbol.variableAttributes.typeOfVariable = type;
+                        symbol.variableAttributes.size = size;
+                        symbol.variableAttributes.offset = identifierOffset;
+                        identifierOffset += size;
+                    }
+                }
 
-            // add information about function parameter
-            if(parameterMode != null) {
-                funcSymbol.functionAttributes.numberOfParameter += identifierList.size();
+                currentToken = tokenizer.getNextToken();
+            } else if(currentToken.getTokenType() == TokenType.CONSTANT){
+                currentToken = tokenizer.getNextToken();
+                match(currentToken, TokenType.assignop);
+                String numberStr = Value(); // this block does not end with getNextToken because, it happens in Value function
 
-                // add type and mode of each parameter
-                for (Symbol symbol : identifierList) {
-                    if (symbol.constantAttributes == null)
-                        funcSymbol.functionAttributes.parameterTypeList.add(symbol.variableAttributes.typeOfVariable);
-                    else
-                        funcSymbol.functionAttributes.parameterTypeList.add(symbol.constantAttributes.typeOfConstant);
+                int size;
+                EVariableType type;
+                if(numberStr.indexOf('.') == -1){
+                    type = EVariableType.integerType;
+                    size = 2;
+                } else {
+                    type = EVariableType.floatType;
+                    size = 4;
+                }
 
-                    if (parameterMode != null) {
-                        funcSymbol.functionAttributes.parameterModeList.add(parameterMode);
+                for(Symbol symbol : identifierList){
+                    if(symbol.getSymbolType() == null){
+                        symbol.setSymbolType(ESymbolType.constant);
+                        symbol.constantAttributes.typeOfConstant = type;
+
+                        if(type == EVariableType.integerType)
+                            symbol.constantAttributes.value = Integer.parseInt(numberStr);
+                        else
+                            symbol.constantAttributes.valueR = Float.parseFloat(numberStr);
+
+                        symbol.constantAttributes.offset = identifierOffset;
+                        identifierOffset += size;
                     }
                 }
             }
-            // add information about local variable
-            else {
-                funcSymbol.functionAttributes.sizeOfLocalVariable += identifierOffset;
-            }
 
-            identifierList.clear();
-            currentToken = tokenizer.getNextToken();
-        } else if(currentToken.getTokenType() == TokenType.CONSTANT){
-            currentToken = tokenizer.getNextToken();
-            match(currentToken, TokenType.assignop);
-            String numberStr = Value(); // this block does not end with getNextToken because, it happens in Value function
-
-            int size;
-            EVariableType type;
-            if(numberStr.indexOf('.') == -1){
-                type = EVariableType.integerType;
-                size = 2;
-            } else {
-                type = EVariableType.floatType;
-                size = 4;
-            }
-
-            for(Symbol symbol : identifierList){
-                if(symbol.getSymbolType() == null){
-                    symbol.setSymbolType(ESymbolType.constant);
-                    symbol.constantAttributes.typeOfConstant = type;
-                    if(type == EVariableType.integerType)
-                        symbol.constantAttributes.value = Integer.parseInt(numberStr);
-                    else
-                        symbol.constantAttributes.valueR = Float.parseFloat(numberStr);
-                    symbol.constantAttributes.offset = identifierOffset;
-                    identifierOffset += size;
-                }
-            }
-
-            Symbol funcSymbol = _symbolTable.lookup(functionName_);
+            Symbol funcSymbol = _symbolTable.lookup(functionName_, ESymbolType.function);
 
             // add information about function parameter
             if(parameterMode != null) {
@@ -290,6 +281,7 @@ public class Parser {
 
     // This function implements  IdentifierList  -> 	idt IdentifierList`
     private void IdentifierList() {
+        checkForDuplicateSymbol();
         identifierList.add(_symbolTable.insert(currentToken.getLexeme(), _symbolTable.CurrentDepth));
         match(currentToken, TokenType.id);
         IdentifierList_();
@@ -299,6 +291,7 @@ public class Parser {
     private void IdentifierList_() {
         if(currentToken.getTokenType() == TokenType.comma){
             currentToken = tokenizer.getNextToken();
+            checkForDuplicateSymbol();
             identifierList.add(_symbolTable.insert(currentToken.getLexeme(), _symbolTable.CurrentDepth));
             match(currentToken, TokenType.id);
             IdentifierList_();
