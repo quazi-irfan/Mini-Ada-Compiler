@@ -1,9 +1,6 @@
 package ParserPkg;
 
-import SymbolTablePkg.ESymbolType;
-import SymbolTablePkg.EVariableType;
-import SymbolTablePkg.Symbol;
-import SymbolTablePkg.SymbolTable;
+import SymbolTablePkg.*;
 import TokenizerPkg.*;
 
 import java.io.IOException;
@@ -39,16 +36,14 @@ import java.util.LinkedList;
  SeqOfStatments	->	ε
 
  */
-//          w:constant := 5;
-//        z:integer;
-//        a,b,c,d:float;
+
 public class Parser {
     private Tokenizer tokenizer;
     private Token currentToken;
     private boolean isParsingSuccessful;
     private SymbolTable _symbolTable;
     private LinkedList<Symbol> identifierList = new LinkedList<>();
-    private int localVariableOffset = 2;
+    private int identifierOffset = 0;
 
     public Parser(String fileName) throws IOException {
         tokenizer = new Tokenizer(fileName);
@@ -72,16 +67,26 @@ public class Parser {
     // This function implements Prog	->	procedure idt Args is DeclarativePart Procedures begin SeqOfStatements end idt;
     private void Prog(){
         match(currentToken, TokenType.PROCEDURE);
+        String functionName = currentToken.getLexeme();
+        _symbolTable.insert(functionName, _symbolTable.CurrentDepth).setSymbolType(ESymbolType.function);
+        _symbolTable.CurrentDepth++;
         match(currentToken, TokenType.id);
-        Args();
+
+        Args(functionName);
         match(currentToken, TokenType.IS);
-        DeclarativePart();
+        identifierOffset = 0; // set it back to zero for local variable offset
+        DeclarativePart(functionName);
         Procedures();
         match(currentToken, TokenType.BEGIN);
         SeqOfStatements();
+
         match(currentToken, TokenType.END);
         match(currentToken, TokenType.id);
+        // match the start id
         match(currentToken, TokenType.semicolon);
+        _symbolTable.printDepth(_symbolTable.CurrentDepth);
+        _symbolTable.CurrentDepth--;
+        _symbolTable.printDepth(_symbolTable.CurrentDepth);
     }
 
     // This function implements  SeqOfStatments	->	E
@@ -99,47 +104,51 @@ public class Parser {
     }
 
     // This function implements  DeclarativePart	->	IdentifierList : TypeMark ; DeclarativePart | E
-    private void DeclarativePart() {
+    private void DeclarativePart(String functionName_) {
         if(currentToken.getTokenType() == TokenType.id){ // we do not use "currentToken = tokenizer.getNextToken()" here, since we are doing a look ahead
             IdentifierList();
             match(currentToken, TokenType.colon);
-            TypeMark();
+            TypeMark(functionName_, null);
             match(currentToken, TokenType.semicolon);
-            DeclarativePart();
+            DeclarativePart(functionName_);
         }
         // else empty production
     }
 
     // This function implements  Args	->	( ArgList ) | E
-    private void Args() {
+    private void Args(String functionName_) {
         if(currentToken.getTokenType() == TokenType.lparen) {
             currentToken = tokenizer.getNextToken();
-            ArgList();
+            ArgList(functionName_);
             match(currentToken, TokenType.rparen);
         }
-        // else empty production
+        // no more function parameters
     }
 
     // This function implements  ArgList	-> 	Mode IdentifierList : TypeMark MoreArgs
-    private void ArgList() {
-        Mode();
+    private void ArgList(String functionName_) {
+        EParameterModeType parameterMode = Mode();
         IdentifierList();
         match(currentToken, TokenType.colon);
-        TypeMark();
-        MoreArgs();
+        TypeMark(functionName_, parameterMode);
+
+        MoreArgs(functionName_);
     }
 
     // This function implements MoreArgs	-> 	; ArgList | E
-    private void MoreArgs() {
+    private void MoreArgs(String functionName_) {
         if(currentToken.getTokenType() == TokenType.semicolon){
             currentToken = tokenizer.getNextToken();
-            ArgList();
+            ArgList(functionName_);
         }
-        // else empty production
     }
 
+//    private void TypeMark(){
+//        TypeMark(null);
+//    }
+
     // This function implements  TypeMark	->	integert | realt | chart | const assignop Value
-    private void TypeMark() {
+    private void TypeMark(String functionName_, EParameterModeType parameterMode) {
         if(currentToken.getTokenType() == TokenType.INTEGER |
                 currentToken.getTokenType() == TokenType.FLOAT |
                 currentToken.getTokenType() == TokenType.CHAR){
@@ -158,11 +167,36 @@ public class Parser {
             }
 
             for(Symbol symbol : identifierList){
-                symbol.setSymbolType(ESymbolType.variable);
-                symbol.variableAttributes.typeOfVariable = type;
-                symbol.variableAttributes.size = size;
-                symbol.variableAttributes.offset = localVariableOffset;
-                localVariableOffset += size;
+                if(symbol.getSymbolType() == null){
+                    symbol.setSymbolType(ESymbolType.variable);
+                    symbol.variableAttributes.typeOfVariable = type;
+                    symbol.variableAttributes.size = size;
+                    symbol.variableAttributes.offset = identifierOffset;
+                    identifierOffset += size;
+                }
+            }
+
+            Symbol funcSymbol = _symbolTable.lookup(functionName_);
+
+            // add information about function parameter
+            if(parameterMode != null) {
+                funcSymbol.functionAttributes.numberOfParameter += identifierList.size();
+
+                // add type and mode of each parameter
+                for (Symbol symbol : identifierList) {
+                    if (symbol.constantAttributes == null)
+                        funcSymbol.functionAttributes.parameterTypeList.add(symbol.variableAttributes.typeOfVariable);
+                    else
+                        funcSymbol.functionAttributes.parameterTypeList.add(symbol.constantAttributes.typeOfConstant);
+
+                    if (parameterMode != null) {
+                        funcSymbol.functionAttributes.parameterModeList.add(parameterMode);
+                    }
+                }
+            }
+            // add information about local variable
+            else {
+                funcSymbol.functionAttributes.sizeOfLocalVariable += identifierOffset;
             }
 
             identifierList.clear();
@@ -170,7 +204,7 @@ public class Parser {
         } else if(currentToken.getTokenType() == TokenType.CONSTANT){
             currentToken = tokenizer.getNextToken();
             match(currentToken, TokenType.assignop);
-            String numberStr = Value();
+            String numberStr = Value(); // this block does not end with getNextToken because, it happens in Value function
 
             int size;
             EVariableType type;
@@ -183,18 +217,44 @@ public class Parser {
             }
 
             for(Symbol symbol : identifierList){
-                symbol.setSymbolType(ESymbolType.constant);
-                symbol.constantAttributes.typeOfConstant = type;
-                if(type == EVariableType.integerType)
-                    symbol.constantAttributes.value = Integer.parseInt(numberStr);
-                else
-                    symbol.constantAttributes.valueR = Float.parseFloat(numberStr);
-                symbol.constantAttributes.offset = localVariableOffset;
-                localVariableOffset += size;
+                if(symbol.getSymbolType() == null){
+                    symbol.setSymbolType(ESymbolType.constant);
+                    symbol.constantAttributes.typeOfConstant = type;
+                    if(type == EVariableType.integerType)
+                        symbol.constantAttributes.value = Integer.parseInt(numberStr);
+                    else
+                        symbol.constantAttributes.valueR = Float.parseFloat(numberStr);
+                    symbol.constantAttributes.offset = identifierOffset;
+                    identifierOffset += size;
+                }
             }
-            identifierList.clear();
 
-        } else {
+            Symbol funcSymbol = _symbolTable.lookup(functionName_);
+
+            // add information about function parameter
+            if(parameterMode != null) {
+                funcSymbol.functionAttributes.numberOfParameter += identifierList.size();
+
+                // add type and mode of each parameter
+                for (Symbol symbol : identifierList) {
+                    if (symbol.constantAttributes == null)
+                        funcSymbol.functionAttributes.parameterTypeList.add(symbol.variableAttributes.typeOfVariable);
+                    else
+                        funcSymbol.functionAttributes.parameterTypeList.add(symbol.constantAttributes.typeOfConstant);
+
+                    if (parameterMode != null) {
+                        funcSymbol.functionAttributes.parameterModeList.add(parameterMode);
+                    }
+                }
+            }
+            // add information about local variable
+            else {
+                funcSymbol.functionAttributes.sizeOfLocalVariable += identifierOffset;
+            }
+
+            identifierList.clear();
+        }
+        else {
             System.out.println("At line number " + currentToken.getLineNumber() + ", expecting integer/float/char/const , but found " + currentToken.getTokenType() + " token with lexeme " + currentToken.getLexeme());
             System.exit(1);
         }
@@ -208,11 +268,22 @@ public class Parser {
     }
 
     // This function implements Mode	->	in | out | inout | E
-    private void Mode() {
-        // todo ask if it's correct
-        if(currentToken.getLexeme().equals("IN") | currentToken.getLexeme().equals("OUT") | currentToken.getLexeme().equals("INOUT")) {
+    private EParameterModeType Mode() {
+        String lexeme = currentToken.getLexeme();
+        if(lexeme.equalsIgnoreCase("IN") | lexeme.equalsIgnoreCase("OUT") | lexeme.equalsIgnoreCase("INOUT")) {
+
+            EParameterModeType parameterMode;
+            if(lexeme.equalsIgnoreCase("IN"))
+                parameterMode = EParameterModeType.in;
+            else if(lexeme.equalsIgnoreCase("OUT"))
+                parameterMode = EParameterModeType.out;
+            else
+                parameterMode = EParameterModeType.inout;
+
             currentToken = tokenizer.getNextToken();
-            return;
+            return parameterMode;
+        } else {
+            return EParameterModeType.in;
         }
         // else empty production
     }

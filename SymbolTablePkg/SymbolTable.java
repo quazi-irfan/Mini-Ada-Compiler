@@ -81,7 +81,8 @@ public class SymbolTable {
                 for(int j = 0; j<linkedList.size(); j++){
                     Symbol symbol = linkedList.get(j);
                     if(symbol.depth == depth_)
-                        System.out.println("Lexeme '" + symbol.lexeme + "', SymbolType " + symbol.symbolType + " ,Depth " + symbol.depth);
+                        System.out.println("Symbol: Lexeme '" + symbol.lexeme + "', SymbolType " + symbol.symbolType + " ,Depth " + symbol.depth +
+                                "\nAttributes of '" +symbol.lexeme + "': "  + symbol.getSymbolAttributes());
                 }
             }
         }
