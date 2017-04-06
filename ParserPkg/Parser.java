@@ -240,7 +240,7 @@ public class Parser {
             }
             // add information about local variable
             else {
-                funcSymbol.functionAttributes.sizeOfLocalVariable += identifierOffset;
+                funcSymbol.functionAttributes.sizeOfLocalVariable = identifierOffset;
             }
 
             identifierList.clear();
