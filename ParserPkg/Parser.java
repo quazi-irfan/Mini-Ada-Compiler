@@ -104,7 +104,7 @@ public class Parser {
 
     // This function implements  Args	->	( ArgList ) | E
     private void Args() {
-        if(optionalMatch(currentToken, TokenType.lparen)) {
+        if(currentToken.getTokenType() == TokenType.lparen) {
             currentToken = tokenizer.getNextToken();
             ArgList();
             match(currentToken, TokenType.rparen);
@@ -169,7 +169,7 @@ public class Parser {
 
     // This function implements  IdentifierList`	->	,idt IdentifierList` | E
     private void IdentifierList_() {
-        if(optionalMatch(currentToken, TokenType.comma)){
+        if(currentToken.getTokenType() == TokenType.comma){
             currentToken = tokenizer.getNextToken();
             match(currentToken, TokenType.id);
             IdentifierList_();
@@ -190,18 +190,6 @@ public class Parser {
         } else {
             currentToken = tokenizer.getNextToken();
         }
-    }
-
-    /**
-     * Returns true or false if the localCurrentToken matchs with the desired token we are looking for.
-     * Use this method, when the grammar rule has alternate path to take.
-     * If we don't get the token we are looking for, we might just need to use another grammer.
-     * @param localCurrentToken
-     * @param desiredToken The token we are looking for.
-     * @return
-     */
-    private boolean optionalMatch(Token localCurrentToken, TokenType desiredToken) {
-        return (localCurrentToken.getTokenType() == desiredToken);
     }
 
     public boolean isParsingSuccessful(){
