@@ -69,6 +69,7 @@ public class Parser {
 
     // This function implements Prog	->	procedure idt Args is DeclarativePart Procedures begin SeqOfStatements end idt;
     private void Prog(){
+        identifierOffset = 0; // set it back to zero for the start of new function
         match(currentToken, TokenType.PROCEDURE);
         String functionName = currentToken.getLexeme();
         checkForDuplicateSymbol();
@@ -85,6 +86,11 @@ public class Parser {
         SeqOfStatements();
 
         match(currentToken, TokenType.END);
+        if(!functionName.equalsIgnoreCase(currentToken.getLexeme())){
+            System.out.println("Error : Missing \"END " + functionName+";\"");
+            System.exit(1);
+        }
+
         match(currentToken, TokenType.id);
         // match the start id
         match(currentToken, TokenType.semicolon);
