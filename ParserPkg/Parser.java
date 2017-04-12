@@ -15,25 +15,34 @@ import java.util.LinkedList;
                     end idt;
 
  DeclarativePart	->	IdentifierList : TypeMark ; DeclarativePart | ε
-
- IdentifierList		->	idt |
-                        IdentifierList , idt
-
+ IdentifierList		->	idt | IdentifierList , idt
  TypeMark		->	integert | realt | chart | const assignop Value
-
  Value			->	NumericalLiteral
-
  Procedures		-> 	Prog Procedures | ε
-
  Args			->	( ArgList ) | ε
-
  ArgList		-> 	Mode IdentifierList : TypeMark MoreArgs
-
  MoreArgs		-> 	; ArgList | ε
-
  Mode			->	in | out | inout | ε
 
- SeqOfStatments	->	ε
+SeqOfStatments	->	Statement  ; StatTail | ε
+StatTail		-> 	Statement  ; StatTail | ε
+Statement		-> 	AssignStat	| IOStat
+AssignStat		->	idt  :=  Expr
+IOStat			->	ε
+Expr			->	Relation
+Relation		->	SimpleExpr
+SimpleExpr		->	Term MoreTerm
+MoreTerm		->	Addop Term MoreTerm | ε
+Term			->	Factor  MoreFactor
+MoreFactor		->  Mulop Factor MoreFactor| ε
+Factor			->	id |
+					num	|
+					( Expr )|
+					not Factor|
+					SignOp Factor
+Addop			->	+ | - | or
+Mulop			-> 	* | / | mod | rem | and
+SignOp		    ->	-
 
  */
 
@@ -98,28 +107,6 @@ public class Parser {
         _symbolTable.CurrentDepth--;
     }
 
-    private void checkForDuplicateSymbol() {
-        Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
-        if(symbol != null && symbol.depth == _symbolTable.CurrentDepth){
-            System.out.println("Error : Duplicate symbol: '" +currentToken.getLexeme() + "'");
-            System.exit(1);
-        }
-    }
-
-    // This function implements  SeqOfStatments	->	E
-    private void SeqOfStatements() {
-        return;
-    }
-
-    // This function implements  Procedures  -> 	Prog Procedures | E
-    private void Procedures() {
-        if(currentToken.getTokenType() == TokenType.PROCEDURE){ // we do not use "currentToken = tokenizer.getNextToken()" here, since we are doing a look ahead
-            Prog();
-            Procedures();
-        }
-        // else empty statement
-    }
-
     // This function implements  DeclarativePart	->	IdentifierList : TypeMark ; DeclarativePart | E
     private void DeclarativePart(String functionName_) {
         if(currentToken.getTokenType() == TokenType.id){ // we do not use "currentToken = tokenizer.getNextToken()" here, since we are doing a look ahead
@@ -132,32 +119,24 @@ public class Parser {
         // else empty production
     }
 
-    // This function implements  Args	->	( ArgList ) | E
-    private void Args(String functionName_) {
-        if(currentToken.getTokenType() == TokenType.lparen) {
-            currentToken = tokenizer.getNextToken();
-            ArgList(functionName_);
-            match(currentToken, TokenType.rparen);
-        }
-        // no more function parameters
+    // This function implements  IdentifierList  -> 	idt IdentifierList`
+    private void IdentifierList() {
+        checkForDuplicateSymbol();
+        identifierList.add(_symbolTable.insert(currentToken.getLexeme(), _symbolTable.CurrentDepth));
+        match(currentToken, TokenType.id);
+        IdentifierList_();
     }
 
-    // This function implements  ArgList	-> 	Mode IdentifierList : TypeMark MoreArgs
-    private void ArgList(String functionName_) {
-        EParameterModeType parameterMode = Mode();
-        IdentifierList();
-        match(currentToken, TokenType.colon);
-        TypeMark(functionName_, parameterMode);
-
-        MoreArgs(functionName_);
-    }
-
-    // This function implements MoreArgs	-> 	; ArgList | E
-    private void MoreArgs(String functionName_) {
-        if(currentToken.getTokenType() == TokenType.semicolon){
+    // This function implements  IdentifierList`	->	,idt IdentifierList` | E
+    private void IdentifierList_() {
+        if(currentToken.getTokenType() == TokenType.comma){
             currentToken = tokenizer.getNextToken();
-            ArgList(functionName_);
+            checkForDuplicateSymbol();
+            identifierList.add(_symbolTable.insert(currentToken.getLexeme(), _symbolTable.CurrentDepth));
+            match(currentToken, TokenType.id);
+            IdentifierList_();
         }
+        // else empty productoin
     }
 
     // This function implements  TypeMark	->	integert | realt | chart | const assignop Value
@@ -264,6 +243,43 @@ public class Parser {
         return value;
     }
 
+    // This function implements  Procedures  -> 	Prog Procedures | E
+    private void Procedures() {
+        if(currentToken.getTokenType() == TokenType.PROCEDURE){ // we do not use "currentToken = tokenizer.getNextToken()" here, since we are doing a look ahead
+            Prog();
+            Procedures();
+        }
+        // else empty statement
+    }
+
+    // This function implements  Args	->	( ArgList ) | E
+    private void Args(String functionName_) {
+        if(currentToken.getTokenType() == TokenType.lparen) {
+            currentToken = tokenizer.getNextToken();
+            ArgList(functionName_);
+            match(currentToken, TokenType.rparen);
+        }
+        // no more function parameters
+    }
+
+    // This function implements  ArgList	-> 	Mode IdentifierList : TypeMark MoreArgs
+    private void ArgList(String functionName_) {
+        EParameterModeType parameterMode = Mode();
+        IdentifierList();
+        match(currentToken, TokenType.colon);
+        TypeMark(functionName_, parameterMode);
+
+        MoreArgs(functionName_);
+    }
+
+    // This function implements MoreArgs	-> 	; ArgList | E
+    private void MoreArgs(String functionName_) {
+        if(currentToken.getTokenType() == TokenType.semicolon){
+            currentToken = tokenizer.getNextToken();
+            ArgList(functionName_);
+        }
+    }
+
     // This function implements Mode	->	in | out | inout | E
     private EParameterModeType Mode() {
         String lexeme = currentToken.getLexeme();
@@ -285,24 +301,9 @@ public class Parser {
         // else empty production
     }
 
-    // This function implements  IdentifierList  -> 	idt IdentifierList`
-    private void IdentifierList() {
-        checkForDuplicateSymbol();
-        identifierList.add(_symbolTable.insert(currentToken.getLexeme(), _symbolTable.CurrentDepth));
-        match(currentToken, TokenType.id);
-        IdentifierList_();
-    }
-
-    // This function implements  IdentifierList`	->	,idt IdentifierList` | E
-    private void IdentifierList_() {
-        if(currentToken.getTokenType() == TokenType.comma){
-            currentToken = tokenizer.getNextToken();
-            checkForDuplicateSymbol();
-            identifierList.add(_symbolTable.insert(currentToken.getLexeme(), _symbolTable.CurrentDepth));
-            match(currentToken, TokenType.id);
-            IdentifierList_();
-        }
-        // else empty productoin
+    // This function implements  SeqOfStatments	->	E
+    private void SeqOfStatements() {
+        return;
     }
 
     /**
@@ -317,6 +318,14 @@ public class Parser {
             System.exit(1);
         } else {
             currentToken = tokenizer.getNextToken();
+        }
+    }
+
+    private void checkForDuplicateSymbol() {
+        Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
+        if(symbol != null && symbol.depth == _symbolTable.CurrentDepth){
+            System.out.println("Error : Duplicate symbol: '" +currentToken.getLexeme() + "'");
+            System.exit(1);
         }
     }
 
