@@ -14,8 +14,9 @@ import java.util.LinkedList;
                     SeqOfStatements
                     end idt;
 
- DeclarativePart	->	IdentifierList : TypeMark ; DeclarativePart | ε
- IdentifierList		->	idt | IdentifierList , idt
+ DeclarativePart    ->	IdentifierList : TypeMark ; DeclarativePart | ε
+ IdentifierList	    ->	idt | idt IdentifierList_
+ IdentifierList_    ->	,idt IdentifierList_ | ε
  TypeMark		->	integert | realt | chart | const assignop Value
  Value			->	NumericalLiteral
  Procedures		-> 	Prog Procedures | ε
@@ -24,25 +25,25 @@ import java.util.LinkedList;
  MoreArgs		-> 	; ArgList | ε
  Mode			->	in | out | inout | ε
 
-SeqOfStatments	->	Statement  ; StatTail | ε
-StatTail		-> 	Statement  ; StatTail | ε
-Statement		-> 	AssignStat	| IOStat
-AssignStat		->	idt  :=  Expr
-IOStat			->	ε
-Expr			->	Relation
-Relation		->	SimpleExpr
-SimpleExpr		->	Term MoreTerm
-MoreTerm		->	Addop Term MoreTerm | ε
-Term			->	Factor  MoreFactor
-MoreFactor		->  Mulop Factor MoreFactor| ε
-Factor			->	id |
+ SeqOfStatments	->	Statement  ; StatTail | ε
+ StatTail		-> 	Statement  ; StatTail | ε
+ Statement		-> 	AssignStat	| IOStat
+ AssignStat		->	idt  :=  Expr
+ IOStat			->	ε
+ Expr			->	Relation
+ Relation		->	SimpleExpr
+ SimpleExpr		->	Term MoreTerm
+ MoreTerm		->	Addop Term MoreTerm | ε
+ Term			->	Factor  MoreFactor
+ MoreFactor		->  Mulop Factor MoreFactor| ε
+ Factor			->	id |
 					num	|
 					( Expr )|
 					not Factor|
 					SignOp Factor
-Addop			->	+ | - | or
-Mulop			-> 	* | / | mod | rem | and
-SignOp		    ->	-
+ Addop			->	+ | - | or
+ Mulop			-> 	* | / | mod | rem | and
+ SignOp		    ->	-
 
  */
 
@@ -65,7 +66,7 @@ public class Parser {
         Prog();
 
         // print the symbol table of global space
-        _symbolTable.printDepth(_symbolTable.CurrentDepth);
+//        _symbolTable.printDepth(_symbolTable.CurrentDepth);
 
         if(currentToken.getTokenType() != TokenType.eof) {
             System.out.println("At line number " + currentToken.getLineNumber() + " unused token(" + currentToken.getTokenType() + ", " + currentToken.getLexeme() + ") found. Expecting End of File token.");
@@ -99,11 +100,13 @@ public class Parser {
             System.out.println("Error : Missing statement \"END " + functionName+";\"");
             System.exit(1);
         }
-
-        match(currentToken, TokenType.id);
         // match the start id
+        match(currentToken, TokenType.id);
+
         match(currentToken, TokenType.semicolon);
-        _symbolTable.printDepth(_symbolTable.CurrentDepth);
+
+//        _symbolTable.printDepth(_symbolTable.CurrentDepth);
+        _symbolTable.deleteDepth(_symbolTable.CurrentDepth);
         _symbolTable.CurrentDepth--;
     }
 
@@ -301,9 +304,122 @@ public class Parser {
         // else empty production
     }
 
-    // This function implements  SeqOfStatments	->	E
+    // Thie grammar checks for id token because we allow only assignment statement and IO statement
+    // All assignment statement has to start with an identifier token
+    // This function implements  SeqOfStatments	->	Statement  ; StatTail | ε
     private void SeqOfStatements() {
+        if(currentToken.getTokenType() == TokenType.id){
+            Statement();
+            match(currentToken, TokenType.semicolon);
+            StatTail();
+        }
+        // else empty production
+    }
+
+    // StatTail		-> 	Statement  ; StatTail | ε
+    private void StatTail(){
+        if(currentToken.getTokenType() == TokenType.id){
+            Statement();
+            match(currentToken, TokenType.semicolon);
+            StatTail();
+        }
+        // else empty production
+    }
+
+    // Statement		-> 	AssignStat	| IOStat
+    private void Statement(){
+        if(currentToken.getTokenType() == TokenType.id){
+            AssignStat();
+        } else {
+            IOStat();
+        }
+    }
+
+    // AssignStat		->	idt  :=  Expr
+    private void AssignStat() {
+        // check if the variable is declared before use
+        Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
+        if(symbol != null && symbol.depth <= _symbolTable.CurrentDepth) {
+            match(currentToken, TokenType.id);
+        } else {
+            System.out.println("Error: Undefined identifier " + currentToken.getLexeme());
+            System.exit(1);
+        }
+        match(currentToken, TokenType.assignop);
+        Expr();
+    }
+
+    // IOStat			->	ε
+    private void IOStat() {
         return;
+    }
+
+    // Expr			->	Relation
+    private void Expr() {
+        Relation();
+    }
+
+    // Relation		->	SimpleExpr
+    private void Relation() {
+        SimpleExpr();
+    }
+
+    // SimpleExpr		->	Term MoreTerm
+    private void SimpleExpr() {
+        Term();
+        MoreTerm();
+    }
+
+    // MoreTerm		->	Addop Term MoreTerm | ε
+    private void MoreTerm() {
+        if(currentToken.getTokenType() == TokenType.addop){
+            match(currentToken, TokenType.addop);
+            Term();
+            MoreTerm();
+        }
+    }
+
+    // Term			->	Factor  MoreFactor
+    private void Term() {
+        Factor();
+        MoreFactor();
+    }
+
+    // MoreFactor		->  Mulop Factor MoreFactor| ε
+    private void MoreFactor() {
+        if(currentToken.getTokenType() == TokenType.mulop){
+            match(currentToken, TokenType.mulop);
+            Factor();
+            MoreFactor();
+        }
+    }
+
+    // Factor			->	id | num | ( Expr ) | not Factor | SignOp Factor
+    private void Factor() {
+        if(currentToken.getTokenType() == TokenType.id){
+            Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
+            if(symbol != null && symbol.depth <= _symbolTable.CurrentDepth) {
+                match(currentToken, TokenType.id);
+            } else {
+                System.out.println("Error: Undefined identifier " + currentToken.getLexeme());
+                System.exit(1);
+            }
+        } else if(currentToken.getTokenType() == TokenType.num){
+            match(currentToken, TokenType.num);
+        } else if(currentToken.getTokenType() == TokenType.lparen){
+            match(currentToken, TokenType.lparen);
+            Expr();
+            match(currentToken, TokenType.rparen);
+        } else
+            SignOp();
+    }
+
+    // SignOp		    ->	-
+    private void SignOp() {
+        if(currentToken.getLexeme() == "-"){
+            currentToken = tokenizer.getNextToken();
+            Factor();
+        }
     }
 
     /**
@@ -324,7 +440,7 @@ public class Parser {
     private void checkForDuplicateSymbol() {
         Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
         if(symbol != null && symbol.depth == _symbolTable.CurrentDepth){
-            System.out.println("Error : Duplicate symbol: '" +currentToken.getLexeme() + "'");
+            System.out.println("Error: Duplicate symbol: '" +currentToken.getLexeme() + "'");
             System.exit(1);
         }
     }
