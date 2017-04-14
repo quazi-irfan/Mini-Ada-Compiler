@@ -53,6 +53,7 @@ public class Parser {
     private boolean isParsingSuccessful;
     private SymbolTable _symbolTable;
     private LinkedList<Symbol> identifierList = new LinkedList<>();
+    private int _identifierListOffset = 0;
     private int _identifierOffset = 2;
 
     public Parser(String fileName) throws IOException {
@@ -79,7 +80,7 @@ public class Parser {
 
     // This function implements Prog	->	procedure idt Args is DeclarativePart Procedures begin SeqOfStatements end idt;
     private void Prog(){
-        _identifierOffset = 0; // set it back to zero for the start of new function
+        _identifierOffset = 4; // set it back to 4 for the start of new function
         match(currentToken, TokenType.PROCEDURE);
         String functionName = currentToken.getLexeme();
         checkForDuplicateSymbol();
@@ -89,7 +90,7 @@ public class Parser {
 
         Args(functionName);
         match(currentToken, TokenType.IS);
-        _identifierOffset = 0; // set it back to zero for local variable offset
+        _identifierOffset = 2; // set it back to 2 for local variable offset
         DeclarativePart(functionName);
         Procedures();
         match(currentToken, TokenType.BEGIN);
@@ -178,7 +179,9 @@ public class Parser {
                 // such as, symbol type(variable or constant), variable type(int, float or char),
                 // variable size, variable offset
                 for(Symbol symbol : identifierList){
+                    // if symbol has not been initialized
                     if(symbol.getSymbolType() == null){
+
                         // set symbol type
                         symbol.setSymbolType(ESymbolType.variable);
 
@@ -187,18 +190,13 @@ public class Parser {
 
                         // set variable size
                         symbol.variableAttributes.size = variableSize;
-
-                        // set variable offset
-                        symbol.variableAttributes.offset = _identifierOffset;
-
-                        // increment the offset for next variable in the list
-                        _identifierOffset += variableSize;
                     }
                 }
 
                 currentToken = tokenizer.getNextToken();
             }
-            // if TypeMark is constant assignOp value,
+
+            // if TypeMark is constant
             // then add appropriate attributes to the constant identifiers in the temporary data structure(identifierList)
             else if(currentToken.getTokenType() == TokenType.CONSTANT){
                 // get the attributes by parsing the rest of the grammar : assignOp value
@@ -207,19 +205,14 @@ public class Parser {
                 String numberTokenString = Value(); // this block does not end with getNextToken because, it happens in Value function
 
                 // populate the attributes
-                int constantSize;
                 EVariableType constantType;
-                if(numberTokenString.indexOf('.') == -1){
+                if(numberTokenString.indexOf('.') == -1)
                     constantType = EVariableType.integerType;
-                    constantSize = 2;
-                } else {
+                else
                     constantType = EVariableType.floatType;
-                    constantSize = 4;
-                }
 
                 // go through all the constant identifiers and set their attributes
-                // such as, symbol type(variable or consant), constant type(integer constant or float constant),
-                // numeric value(numeric values) and offset(starting at 2 for local variables)
+                // such as, symbol type(variable or consant), constant type(integer constant or float constant), numeric value(numeric values)
                 for(Symbol symbol : identifierList){
                     if(symbol.getSymbolType() == null){
                         // set symbol type
@@ -228,50 +221,48 @@ public class Parser {
                         // set constant type
                         symbol.constantAttributes.typeOfConstant = constantType;
                         // set numeric value
-                        if(constantType == EVariableType.integerType)
+                        if(constantType == EVariableType.integerType) {
                             symbol.constantAttributes.value = Integer.parseInt(numberTokenString);
-                        else
+                            symbol.constantAttributes.size = 2;
+                        }
+                        else {
                             symbol.constantAttributes.valueR = Float.parseFloat(numberTokenString);
-
-                        // set offset
-                        symbol.constantAttributes.offset = _identifierOffset;
-
-                        // increment the offset for next constant in the list
-                        _identifierOffset += constantSize;
+                            symbol.constantAttributes.size = 4;
+                        }
                     }
                 }
             }
 
-            // after parsing the function parameters, or local variables, add them to
-
             Symbol funcSymbol = _symbolTable.lookup(functionName_, ESymbolType.function);
-
             // if a valid parameter mode was passed to this method then all the identifiers in the identifierList are function parameters
             if(parameterMode_ != null) {
-                // add the curr
-                funcSymbol.functionAttributes.numberOfParameter += identifierList.size();
-
                 // since all identifiers are function parameter we need to add parameter type and mode in another linked list
-                for (Symbol symbol : identifierList) {
+                for(int i = _identifierListOffset; i<identifierList.size(); i++){
+                    _identifierListOffset++;
+                    Symbol symbol = identifierList.get(i);
                     if (symbol.constantAttributes == null)
                         funcSymbol.functionAttributes.parameterTypeList.add(symbol.variableAttributes.typeOfVariable);
                     else
                         funcSymbol.functionAttributes.parameterTypeList.add(symbol.constantAttributes.typeOfConstant);
 
-                    if (parameterMode_ != null) {
-                        funcSymbol.functionAttributes.parameterModeList.add(parameterMode_);
-                    }
+                    funcSymbol.functionAttributes.parameterModeList.add(parameterMode_);
                 }
             }
             // if no valid parameter mode was passed in then all the identifiers in the identifierList are local variables
             else {
-                // offset also represents the size of all local variable because offset is always incremented when a new identifier is added
-                funcSymbol.functionAttributes.sizeOfLocalVariable = _identifierOffset - 2;
-            }
+                // set offset to local variables to 2, 4, 6 so on
+                for(Symbol symbol : identifierList){
+                    symbol.setOffset(_identifierOffset);
+                    _identifierOffset += symbol.getSize();
+                }
 
-            // All the identifiers has their attributes set.
-            // Remove them from the temporary structure before we go to the next variable declaration statement
-            identifierList.clear();
+                // offset also represents the size of all local variable because offset is always incremented when a new identifier is added
+                // we subtract 2 because our offset started at 2
+                funcSymbol.functionAttributes.sizeOfLocalVariable = _identifierOffset - 2;
+
+                // clear the list
+                identifierList.clear();
+            }
         }
 
         // looking for TypeMark but didn't find any, stop parsing and report error
@@ -303,6 +294,21 @@ public class Parser {
             currentToken = tokenizer.getNextToken();
             ArgList(functionName_);
             match(currentToken, TokenType.rparen);
+
+            // assign offset for all function parameters
+            for(int i = identifierList.size()-1; i>= 0; i--){
+                Symbol symbol = identifierList.get(i);
+                symbol.setOffset(_identifierOffset);
+                _identifierOffset += symbol.getSize();
+            }
+
+            // set the size of parameters in the function
+            Symbol funcSymbol = _symbolTable.lookup(functionName_, ESymbolType.function);
+            funcSymbol.functionAttributes.numberOfParameter = identifierList.size();
+            funcSymbol.functionAttributes.sizeOfParameters = _identifierOffset - 4;
+
+            // clear the function parameters from the list
+            identifierList.clear();
         }
         // no more function parameters
     }

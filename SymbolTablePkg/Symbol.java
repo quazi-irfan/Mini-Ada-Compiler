@@ -41,6 +41,7 @@ public class Symbol {
     // attribute of constants
     public class ConstantAttributes implements SymbolAttributes{
         public EVariableType typeOfConstant;
+        public int size;
         public int offset;
         public int value;
         public float valueR;
@@ -57,7 +58,7 @@ public class Symbol {
     // attribute of function
     public class FunctionAttributes implements SymbolAttributes{
         public int sizeOfLocalVariable;
-
+        public int sizeOfParameters;
         public int numberOfParameter;
         public LinkedList<EVariableType> parameterTypeList;
         public LinkedList<EParameterModeType> parameterModeList;
@@ -65,6 +66,7 @@ public class Symbol {
         @Override
         public String toString(){
             return "Num of params: " + numberOfParameter +
+                    ", Size of params: " + sizeOfParameters + " bytes" +
                     ", Type of Params: " + Arrays.toString(parameterTypeList.toArray()) +
                     ", Mode of Params: " + Arrays.toString(parameterModeList.toArray()) +
                     ", Size of Local Var: " + sizeOfLocalVariable + " bytes";
@@ -105,6 +107,41 @@ public class Symbol {
             return functionAttributes;
         else // all are null
             return null;
+    }
+
+    public int getOffset(){
+        if(variableAttributes != null)
+            return variableAttributes.offset;
+        else if(constantAttributes != null)
+            return constantAttributes.offset;
+        else
+            return 0;
+    }
+
+    public void setOffset(int offset_){
+        if(variableAttributes != null)
+            variableAttributes.offset = offset_;
+        else if(constantAttributes != null)
+            constantAttributes.offset = offset_;
+    }
+
+    public int getSize(){
+        if(variableAttributes != null){
+            if(variableAttributes.typeOfVariable == EVariableType.integerType)
+                return 2;
+            else if(variableAttributes.typeOfVariable == EVariableType.floatType)
+                return 4;
+            else
+                return 1;
+        }
+        else if(constantAttributes != null){
+            if(constantAttributes.typeOfConstant == EVariableType.integerType)
+                return 2;
+            else
+                return 4;
+        }
+        else
+            return 0;
     }
 }
 
