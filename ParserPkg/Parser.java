@@ -67,7 +67,7 @@ public class Parser {
         Prog();
 
         // print the symbol table of global space
-        _symbolTable.printDepth(_symbolTable.CurrentDepth);
+//        _symbolTable.printDepth(_symbolTable.CurrentDepth);
 
         if(currentToken.getTokenType() != TokenType.eof) {
             System.out.println("At line number " + currentToken.getLineNumber() + " unused token(" + currentToken.getTokenType() + ", " + currentToken.getLexeme() + ") found. Expecting End of File token.");
@@ -106,7 +106,7 @@ public class Parser {
 
         match(currentToken, TokenType.semicolon);
 
-        _symbolTable.printDepth(_symbolTable.CurrentDepth);
+//        _symbolTable.printDepth(_symbolTable.CurrentDepth);
         _symbolTable.deleteDepth(_symbolTable.CurrentDepth);
         _symbolTable.CurrentDepth--;
     }
@@ -390,7 +390,7 @@ public class Parser {
         if(symbol != null && symbol.depth <= _symbolTable.CurrentDepth) {
             match(currentToken, TokenType.id);
         } else {
-            System.out.println("Error: Undefined identifier " + currentToken.getLexeme());
+            System.out.println("Error: Undefined identifier " + currentToken.getLexeme() + " at line number " + currentToken.getLineNumber());
             System.exit(1);
         }
         match(currentToken, TokenType.assignop);
@@ -449,7 +449,7 @@ public class Parser {
             if(symbol != null && symbol.depth <= _symbolTable.CurrentDepth) {
                 match(currentToken, TokenType.id);
             } else {
-                System.out.println("Error: Undefined identifier " + currentToken.getLexeme());
+                System.out.println("Error: Undefined identifier " + currentToken.getLexeme() + " at line number " + currentToken.getLineNumber());
                 System.exit(1);
             }
             // todo replace the value of the variable with the value if the variable is constant
@@ -489,7 +489,7 @@ public class Parser {
     private void checkForDuplicateSymbol() {
         Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
         if(symbol != null && symbol.depth == _symbolTable.CurrentDepth){
-            System.out.println("Error: Duplicate symbol: '" +currentToken.getLexeme() + "'");
+            System.out.println("Error: Duplicate symbol: '" +currentToken.getLexeme() + "' at line number " + currentToken.getLineNumber());
             System.exit(1);
         }
     }
