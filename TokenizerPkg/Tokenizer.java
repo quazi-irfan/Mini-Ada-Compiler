@@ -1,6 +1,7 @@
 package TokenizerPkg;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,7 +22,13 @@ public class Tokenizer {
 
     public Tokenizer(String fileName)throws IOException{
         // parse the source input file and enlist all available tokens in the TokenList
-        reader = new BufferedReader(new FileReader(fileName));
+        try{
+            reader = new BufferedReader(new FileReader(fileName));
+        }catch (FileNotFoundException e){
+            System.out.println("File not found: " + fileName);
+            System.exit(1);
+        }
+
         input = reader.readLine();
         while(input != null){
             index = 0;

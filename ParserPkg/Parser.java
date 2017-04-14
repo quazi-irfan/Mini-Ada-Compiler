@@ -404,6 +404,7 @@ public class Parser {
                 System.out.println("Error: Undefined identifier " + currentToken.getLexeme());
                 System.exit(1);
             }
+            // todo replace the value of the variable with the value if the variable is constant
         } else if(currentToken.getTokenType() == TokenType.num){
             match(currentToken, TokenType.num);
         } else if(currentToken.getTokenType() == TokenType.lparen){
