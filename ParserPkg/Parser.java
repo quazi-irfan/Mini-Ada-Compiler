@@ -53,7 +53,7 @@ public class Parser {
     private boolean isParsingSuccessful;
     private SymbolTable _symbolTable;
     private LinkedList<Symbol> identifierList = new LinkedList<>();
-    private int identifierOffset = 0;
+    private int _identifierOffset = 2;
 
     public Parser(String fileName) throws IOException {
         tokenizer = new Tokenizer(fileName);
@@ -66,7 +66,7 @@ public class Parser {
         Prog();
 
         // print the symbol table of global space
-//        _symbolTable.printDepth(_symbolTable.CurrentDepth);
+        _symbolTable.printDepth(_symbolTable.CurrentDepth);
 
         if(currentToken.getTokenType() != TokenType.eof) {
             System.out.println("At line number " + currentToken.getLineNumber() + " unused token(" + currentToken.getTokenType() + ", " + currentToken.getLexeme() + ") found. Expecting End of File token.");
@@ -79,7 +79,7 @@ public class Parser {
 
     // This function implements Prog	->	procedure idt Args is DeclarativePart Procedures begin SeqOfStatements end idt;
     private void Prog(){
-        identifierOffset = 0; // set it back to zero for the start of new function
+        _identifierOffset = 0; // set it back to zero for the start of new function
         match(currentToken, TokenType.PROCEDURE);
         String functionName = currentToken.getLexeme();
         checkForDuplicateSymbol();
@@ -89,7 +89,7 @@ public class Parser {
 
         Args(functionName);
         match(currentToken, TokenType.IS);
-        identifierOffset = 0; // set it back to zero for local variable offset
+        _identifierOffset = 0; // set it back to zero for local variable offset
         DeclarativePart(functionName);
         Procedures();
         match(currentToken, TokenType.BEGIN);
@@ -105,7 +105,7 @@ public class Parser {
 
         match(currentToken, TokenType.semicolon);
 
-//        _symbolTable.printDepth(_symbolTable.CurrentDepth);
+        _symbolTable.printDepth(_symbolTable.CurrentDepth);
         _symbolTable.deleteDepth(_symbolTable.CurrentDepth);
         _symbolTable.CurrentDepth--;
     }
@@ -125,8 +125,11 @@ public class Parser {
     // This function implements  IdentifierList  -> 	idt IdentifierList`
     private void IdentifierList() {
         checkForDuplicateSymbol();
+
+        // add the lexeme and it's depth of an identifiers to a temporary data structure (identifierList)
         identifierList.add(_symbolTable.insert(currentToken.getLexeme(), _symbolTable.CurrentDepth));
         match(currentToken, TokenType.id);
+
         IdentifierList_();
     }
 
@@ -135,104 +138,143 @@ public class Parser {
         if(currentToken.getTokenType() == TokenType.comma){
             currentToken = tokenizer.getNextToken();
             checkForDuplicateSymbol();
+
+            // add remaining the lexeme and it's depth of the identifiers to a temporary data structure (identifierList)
             identifierList.add(_symbolTable.insert(currentToken.getLexeme(), _symbolTable.CurrentDepth));
             match(currentToken, TokenType.id);
+
             IdentifierList_();
         }
-        // else empty productoin
+        // else there is no more identifiers
     }
 
     // This function implements  TypeMark	->	integert | realt | chart | const assignop Value
-    private void TypeMark(String functionName_, EParameterModeType parameterMode) {
+    private void TypeMark(String functionName_, EParameterModeType parameterMode_) {
         if(currentToken.getTokenType() == TokenType.INTEGER |
                 currentToken.getTokenType() == TokenType.FLOAT |
                 currentToken.getTokenType() == TokenType.CHAR |
                 currentToken.getTokenType() == TokenType.CONSTANT){
 
+            // if TypeMark is integert, realt and chart,
+            // then add respective attributes to the variable identifiers in the temporary data structure(identifierList)
             if(currentToken.getTokenType() == TokenType.INTEGER |
                     currentToken.getTokenType() == TokenType.FLOAT |
                     currentToken.getTokenType() == TokenType.CHAR){
 
-                int size;
-                EVariableType type;
+                int variableSize;
+                EVariableType variableType;
                 if(currentToken.getTokenType() == TokenType.INTEGER) {
-                    type = EVariableType.integerType;
-                    size = 2;
+                    variableType = EVariableType.integerType;
+                    variableSize = 2;
                 } else if(currentToken.getTokenType() == TokenType.FLOAT) {
-                    type = EVariableType.floatType;
-                    size = 4;
+                    variableType = EVariableType.floatType;
+                    variableSize = 4;
                 }else {
-                    type = EVariableType.characterType;
-                    size = 1;
+                    variableType = EVariableType.characterType;
+                    variableSize = 1;
                 }
 
+                // go through all the constant identifiers and set their attributes
+                // such as, symbol type(variable or constant), variable type(int, float or char),
+                // variable size, variable offset
                 for(Symbol symbol : identifierList){
                     if(symbol.getSymbolType() == null){
+                        // set symbol type
                         symbol.setSymbolType(ESymbolType.variable);
-                        symbol.variableAttributes.typeOfVariable = type;
-                        symbol.variableAttributes.size = size;
-                        symbol.variableAttributes.offset = identifierOffset;
-                        identifierOffset += size;
+
+                        // set variable type
+                        symbol.variableAttributes.typeOfVariable = variableType;
+
+                        // set variable size
+                        symbol.variableAttributes.size = variableSize;
+
+                        // set variable offset
+                        symbol.variableAttributes.offset = _identifierOffset;
+
+                        // increment the offset for next variable in the list
+                        _identifierOffset += variableSize;
                     }
                 }
 
                 currentToken = tokenizer.getNextToken();
-            } else if(currentToken.getTokenType() == TokenType.CONSTANT){
+            }
+            // if TypeMark is constant assignOp value,
+            // then add appropriate attributes to the constant identifiers in the temporary data structure(identifierList)
+            else if(currentToken.getTokenType() == TokenType.CONSTANT){
+                // get the attributes by parsing the rest of the grammar : assignOp value
                 currentToken = tokenizer.getNextToken();
                 match(currentToken, TokenType.assignop);
-                String numberStr = Value(); // this block does not end with getNextToken because, it happens in Value function
+                String numberTokenString = Value(); // this block does not end with getNextToken because, it happens in Value function
 
-                int size;
-                EVariableType type;
-                if(numberStr.indexOf('.') == -1){
-                    type = EVariableType.integerType;
-                    size = 2;
+                // populate the attributes
+                int constantSize;
+                EVariableType constantType;
+                if(numberTokenString.indexOf('.') == -1){
+                    constantType = EVariableType.integerType;
+                    constantSize = 2;
                 } else {
-                    type = EVariableType.floatType;
-                    size = 4;
+                    constantType = EVariableType.floatType;
+                    constantSize = 4;
                 }
 
+                // go through all the constant identifiers and set their attributes
+                // such as, symbol type(variable or consant), constant type(integer constant or float constant),
+                // numeric value(numeric values) and offset(starting at 2 for local variables)
                 for(Symbol symbol : identifierList){
                     if(symbol.getSymbolType() == null){
+                        // set symbol type
                         symbol.setSymbolType(ESymbolType.constant);
-                        symbol.constantAttributes.typeOfConstant = type;
 
-                        if(type == EVariableType.integerType)
-                            symbol.constantAttributes.value = Integer.parseInt(numberStr);
+                        // set constant type
+                        symbol.constantAttributes.typeOfConstant = constantType;
+                        // set numeric value
+                        if(constantType == EVariableType.integerType)
+                            symbol.constantAttributes.value = Integer.parseInt(numberTokenString);
                         else
-                            symbol.constantAttributes.valueR = Float.parseFloat(numberStr);
+                            symbol.constantAttributes.valueR = Float.parseFloat(numberTokenString);
 
-                        symbol.constantAttributes.offset = identifierOffset;
-                        identifierOffset += size;
+                        // set offset
+                        symbol.constantAttributes.offset = _identifierOffset;
+
+                        // increment the offset for next constant in the list
+                        _identifierOffset += constantSize;
                     }
                 }
             }
 
+            // after parsing the function parameters, or local variables, add them to
+
             Symbol funcSymbol = _symbolTable.lookup(functionName_, ESymbolType.function);
 
-            // add information about function parameter
-            if(parameterMode != null) {
+            // if a valid parameter mode was passed to this method then all the identifiers in the identifierList are function parameters
+            if(parameterMode_ != null) {
+                // add the curr
                 funcSymbol.functionAttributes.numberOfParameter += identifierList.size();
 
-                // add type and mode of each parameter
+                // since all identifiers are function parameter we need to add parameter type and mode in another linked list
                 for (Symbol symbol : identifierList) {
                     if (symbol.constantAttributes == null)
                         funcSymbol.functionAttributes.parameterTypeList.add(symbol.variableAttributes.typeOfVariable);
                     else
                         funcSymbol.functionAttributes.parameterTypeList.add(symbol.constantAttributes.typeOfConstant);
 
-                    if (parameterMode != null) {
-                        funcSymbol.functionAttributes.parameterModeList.add(parameterMode);
+                    if (parameterMode_ != null) {
+                        funcSymbol.functionAttributes.parameterModeList.add(parameterMode_);
                     }
                 }
             }
-            // add information about local variable
+            // if no valid parameter mode was passed in then all the identifiers in the identifierList are local variables
             else {
-                funcSymbol.functionAttributes.sizeOfLocalVariable = identifierOffset;
+                // offset also represents the size of all local variable because offset is always incremented when a new identifier is added
+                funcSymbol.functionAttributes.sizeOfLocalVariable = _identifierOffset - 2;
             }
 
+            // All the identifiers has their attributes set.
+            // Remove them from the temporary structure before we go to the next variable declaration statement
             identifierList.clear();
         }
+
+        // looking for TypeMark but didn't find any, stop parsing and report error
         else {
             System.out.println("At line number " + currentToken.getLineNumber() + ", expecting integer/float/char/const , but found " + currentToken.getTokenType() + " token with lexeme " + currentToken.getLexeme());
             System.exit(1);
