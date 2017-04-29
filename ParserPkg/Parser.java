@@ -240,11 +240,16 @@ public class Parser {
                 for(int i = _identifierListOffset; i<identifierList.size(); i++){
                     _identifierListOffset++;
                     Symbol symbol = identifierList.get(i);
-                    if (symbol.constantAttributes == null)
+                    if (symbol.constantAttributes == null) {
                         funcSymbol.functionAttributes.parameterTypeList.add(symbol.variableAttributes.typeOfVariable);
-                    else
+                        symbol.variableAttributes.isParameter = true;
+                    }
+                    else {
                         funcSymbol.functionAttributes.parameterTypeList.add(symbol.constantAttributes.typeOfConstant);
+                        symbol.constantAttributes.isParameter = true;
+                    }
 
+                    // add the mode for every symbol
                     funcSymbol.functionAttributes.parameterModeList.add(parameterMode_);
                 }
             }

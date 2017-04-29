@@ -9,7 +9,7 @@ import java.util.LinkedList;
  * All function except hash is public.
  */
 public class SymbolTable {
-    public static int CurrentDepth = 1; // depth starts from 1
+    public static int CurrentDepth = 0; // depth starts from 1
     public static int TableSize = 211;
     private ArrayList<LinkedList<Symbol>> _hashTable = new ArrayList<>(); // array of 'linked list of symbols'
 

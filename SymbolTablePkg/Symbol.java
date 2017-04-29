@@ -31,10 +31,11 @@ public class Symbol {
         public EVariableType typeOfVariable;
         public int offset;
         public int size;
+        public boolean isParameter;
 
         @Override
         public String toString(){
-            return "Type: " + typeOfVariable.toString() + ", Offset: " + offset + ", Size: " + size;
+            return "Type: " + typeOfVariable.toString() + ", Offset: " + offset + ", Size: " + size + (isParameter ? " Parameter" : " Not Parameter");
         }
     }
 
@@ -45,13 +46,14 @@ public class Symbol {
         public int offset;
         public int value;
         public float valueR;
+        public boolean isParameter;
 
         @Override
         public String toString(){
             if(typeOfConstant == EVariableType.integerType)
-                return "Type: " + typeOfConstant.toString() + ", Offset: " + offset + ", Value: " + value;
+                return "Type: " + typeOfConstant.toString() + ", Offset: " + offset + ", Value: " + value + (isParameter ? " Parameter" : " Not Parameter");
             else
-                return "Type: " + typeOfConstant.toString() + ", Offset: " + offset + ", ValueR: " + valueR;
+                return "Type: " + typeOfConstant.toString() + ", Offset: " + offset + ", ValueR: " + valueR + (isParameter ? " Parameter" : " Not Parameter");
         }
     }
 
