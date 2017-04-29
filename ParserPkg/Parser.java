@@ -243,10 +243,12 @@ public class Parser {
                     if (symbol.constantAttributes == null) {
                         funcSymbol.functionAttributes.parameterTypeList.add(symbol.variableAttributes.typeOfVariable);
                         symbol.variableAttributes.isParameter = true;
+                        symbol.variableAttributes.parameterMode = parameterMode_;
                     }
                     else {
                         funcSymbol.functionAttributes.parameterTypeList.add(symbol.constantAttributes.typeOfConstant);
                         symbol.constantAttributes.isParameter = true;
+                        symbol.constantAttributes.parameterMode = parameterMode_;
                     }
 
                     // add the mode for every symbol

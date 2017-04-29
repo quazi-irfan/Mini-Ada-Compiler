@@ -32,6 +32,7 @@ public class Symbol {
         public int offset;
         public int size;
         public boolean isParameter;
+        public EParameterModeType parameterMode;
 
         @Override
         public String toString(){
@@ -47,6 +48,7 @@ public class Symbol {
         public int value;
         public float valueR;
         public boolean isParameter;
+        public EParameterModeType parameterMode;
 
         @Override
         public String toString(){
