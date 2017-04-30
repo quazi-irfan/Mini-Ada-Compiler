@@ -3,7 +3,10 @@ package ParserPkg;
 import SymbolTablePkg.*;
 import TokenizerPkg.*;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.LinkedList;
 
 /* Our grammar
@@ -56,6 +59,7 @@ public class Parser {
     private int _identifierListOffset = 0;
     private int _identifierOffset = 2;
     private int _tempVariableID = 0;
+    private static int _currentIndexOfFunctionParameter = 0;
 
     private Symbol tempVariable(){
         String tempVariableName = "_t".concat(Integer.toString(_tempVariableID));
@@ -70,6 +74,9 @@ public class Parser {
         return tempSymbol;
     }
     public Parser(String fileName) throws IOException {
+        String tacFileName = fileName.substring(0, fileName.length()-3).concat(".tac");
+        PrintWriter tacWriter = new PrintWriter(tacFileName);
+
         tokenizer = new Tokenizer(fileName);
         currentToken = tokenizer.getNextToken();
 
@@ -89,6 +96,8 @@ public class Parser {
         else {
             isParsingSuccessful = true;
         }
+
+        tacWriter.close();
     }
 
     // This function implements Prog	->	procedure idt Args is DeclarativePart Procedures begin SeqOfStatements end idt;
@@ -397,29 +406,112 @@ public class Parser {
     // Statement		-> 	AssignStat	| IOStat
     private void Statement(){
         if(currentToken.getTokenType() == TokenType.id){
-            AssignStat();
+            isDefinedIdentifier(currentToken.getLexeme());
+
+            String identifier = currentToken.getLexeme();
+            match(currentToken, TokenType.id);
+            AssignStat(identifier);
         } else {
             IOStat();
         }
     }
 
     // AssignStat		->	idt  :=  Expr
-    private void AssignStat() {
-        // check if the variable is declared before use
-        Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
-        if(symbol != null && symbol.depth <= _symbolTable.CurrentDepth) {
-            match(currentToken, TokenType.id);
-        } else {
-            System.out.println("Error: Undefined identifier " + currentToken.getLexeme() + " at line number " + currentToken.getLineNumber());
-            System.exit(1);
-        }
+    private void AssignStat(String identifier_) {
+        if(currentToken.getTokenType() == TokenType.assignop) {
+            Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
+            if (symbol != null && symbol.depth <= _symbolTable.CurrentDepth) {
+                match(currentToken, TokenType.id);
+            } else {
+                System.out.println("Error: Undefined identifier " + currentToken.getLexeme() + " at line number " + currentToken.getLineNumber());
+                System.exit(1);
+            }
 
-        String tacStatement = getSymbolLexemeOrOffset(symbol);
-        tacStatement = tacStatement.concat(" = ");
-        match(currentToken, TokenType.assignop);
-        String synthesizedAttributeofExpe = Expr();
-        tacStatement = tacStatement.concat(synthesizedAttributeofExpe);
-        System.out.println(tacStatement);
+            String tacStatement = getSymbolLexemeOrOffset(symbol);
+            tacStatement = tacStatement.concat(" = ");
+            match(currentToken, TokenType.assignop);
+            String synthesizedAttributeofExpe = Expr();
+            tacStatement = tacStatement.concat(synthesizedAttributeofExpe);
+            System.out.println(tacStatement);
+        } else {
+            ProcCall(identifier_);
+        }
+    }
+
+    // ProcCall			->	idt ( Params )
+    private void ProcCall(String procedureName_) {
+        // current token has already been fowarded inside Statement grammar
+        match(currentToken, TokenType.lparen);
+        Params(procedureName_);
+        match(currentToken, TokenType.rparen);
+
+        System.out.println("call " + procedureName_);
+        _currentIndexOfFunctionParameter = 0;
+    }
+
+    //Params			->	idt ParamsTail | num ParamsTail | ε
+    private void Params(String procedureName_) {
+        if(currentToken.getTokenType() == TokenType.id || currentToken.getTokenType() == TokenType.num) {
+            if (currentToken.getTokenType() == TokenType.id) {
+                isDefinedIdentifier(currentToken.getLexeme());
+
+                Symbol functionSymbol = _symbolTable.lookup(procedureName_, ESymbolType.function);
+                if(functionSymbol.functionAttributes.parameterModeList.get(_currentIndexOfFunctionParameter) != EParameterModeType.in){
+                    System.out.println("push @" + currentToken.getLexeme());
+                } else {
+                    System.out.println("push " + currentToken.getLexeme());
+                }
+
+                match(currentToken, TokenType.id);
+                _currentIndexOfFunctionParameter++;
+                ParamsTail(procedureName_);
+
+            } else if (currentToken.getTokenType() == TokenType.num) {
+                System.out.println("push " + currentToken.getLexeme());
+                match(currentToken, TokenType.id);
+                _currentIndexOfFunctionParameter++;
+                ParamsTail(procedureName_);
+            }
+
+        }
+        //Params			->	ε
+    }
+
+    // ParamsTail		->	, idt ParamsTail | , num ParamsTail | ε
+    private void ParamsTail(String procedureName_) {
+        if(currentToken.getTokenType() == TokenType.comma){
+            currentToken = tokenizer.getNextToken(); // consume the comma token
+
+            if(currentToken.getTokenType() == TokenType.id || currentToken.getTokenType() == TokenType.num) {
+
+                if (currentToken.getTokenType() == TokenType.id){
+                    isDefinedIdentifier(currentToken.getLexeme());
+
+                    Symbol functionSymbol = _symbolTable.lookup(procedureName_, ESymbolType.function);
+                    if(functionSymbol.functionAttributes.parameterModeList.get(_currentIndexOfFunctionParameter) != EParameterModeType.in){
+                        System.out.println("push @" + currentToken.getLexeme());
+                    } else {
+                        System.out.println("push " + currentToken.getLexeme());
+                    }
+
+                    match(currentToken, TokenType.id);
+                    _currentIndexOfFunctionParameter++;
+                    ParamsTail(procedureName_);
+
+                } else if(currentToken.getTokenType() == TokenType.num) {
+                    System.out.println("push " + currentToken.getLexeme());
+
+                    match(currentToken, TokenType.num);
+                    _currentIndexOfFunctionParameter++;
+                    ParamsTail(procedureName_);
+                }
+            }
+            else {
+                System.out.println("Error: Expecting identifier or number token but found " + currentToken.getLexeme() + " at line number " + currentToken.getLineNumber());
+                System.exit(1);
+            }
+        }
+        // ParamsTail -> ε
     }
 
     // IOStat			->	ε
@@ -576,6 +668,18 @@ public class Parser {
         } else {
             return symbol_.lexeme;
         }
+    }
+
+    private boolean isDefinedIdentifier(String lexeme_){
+        Symbol symbol = _symbolTable.lookup(lexeme_);
+        if (symbol != null && symbol.depth <= _symbolTable.CurrentDepth) {
+            return true;
+        } else {
+            System.out.println("Error: Undefined identifier " + currentToken.getLexeme() + " at line number " + currentToken.getLineNumber());
+            System.exit(1);
+        }
+
+        return false;
     }
 }
 
