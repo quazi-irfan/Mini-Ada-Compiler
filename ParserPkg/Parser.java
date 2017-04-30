@@ -58,15 +58,14 @@ public class Parser {
     private int _tempVariableID = 0;
 
     private Symbol tempVariable(){
-        String tempVariableName = "_t".concat(Integer.toString(_identifierOffset));
+        String tempVariableName = "_t".concat(Integer.toString(_tempVariableID));
+
         Symbol tempSymbol = new Symbol(tempVariableName, _symbolTable.CurrentDepth);
         tempSymbol.setSymbolType(ESymbolType.variable);
-
-        Symbol.VariableAttributes symbolVariableAttribute = (Symbol.VariableAttributes)tempSymbol.getSymbolAttributes();
-        _identifierOffset = _identifierOffset + 2;
-        symbolVariableAttribute.offset = _identifierOffset;
+        tempSymbol.setOffset(_identifierOffset);
 
         _symbolTable.insert(tempSymbol);
+        _tempVariableID++;
         return tempSymbol;
     }
     public Parser(String fileName) throws IOException {
@@ -413,8 +412,13 @@ public class Parser {
             System.out.println("Error: Undefined identifier " + currentToken.getLexeme() + " at line number " + currentToken.getLineNumber());
             System.exit(1);
         }
+
+        String tacStatement = symbol.lexeme;
+        tacStatement = tacStatement.concat(" = ");
         match(currentToken, TokenType.assignop);
-        Expr();
+        String synthesizedAttributeofExpe = Expr();
+        tacStatement = tacStatement.concat(synthesizedAttributeofExpe);
+        System.out.println(tacStatement);
     }
 
     // IOStat			->	ε
@@ -423,71 +427,101 @@ public class Parser {
     }
 
     // Expr			->	Relation
-    private void Expr() {
-        Relation();
+    private String Expr() {
+        return Relation();
     }
 
     // Relation		->	SimpleExpr
-    private void Relation() {
-        SimpleExpr();
+    private String Relation() {
+        return SimpleExpr();
     }
 
     // SimpleExpr		->	Term MoreTerm
-    private void SimpleExpr() {
-        Term();
-        MoreTerm();
+    private String SimpleExpr() {
+        String synthesizedAttributeofTerm = Term();
+        return MoreTerm(synthesizedAttributeofTerm);
     }
 
     // MoreTerm		->	Addop Term MoreTerm | ε
-    private void MoreTerm() {
+    private String MoreTerm(String _inheritedAttrib) {
         if(currentToken.getTokenType() == TokenType.addop){
+            Symbol tempSymbol = tempVariable();
+            String tacStatement = "";
+            tacStatement  = tacStatement.concat(tempSymbol.lexeme + " = " + _inheritedAttrib + " " + currentToken.getLexeme()+ " ");
             match(currentToken, TokenType.addop);
-            Term();
-            MoreTerm();
+            String synthesizedAttributeofTerm = Term();
+            tacStatement = tacStatement.concat(synthesizedAttributeofTerm);
+            System.out.println(tacStatement);
+            return MoreTerm(tempSymbol.lexeme);
         }
+        // MoreTerm		->	ε
+        // inheritedAttribute becomes synthesized attribute
+        return _inheritedAttrib;
     }
 
     // Term			->	Factor  MoreFactor
-    private void Term() {
-        Factor();
-        MoreFactor();
+    private String Term() {
+        String synthesizedAttributeofFactor = Factor();
+        return MoreFactor(synthesizedAttributeofFactor);
     }
 
     // MoreFactor		->  Mulop Factor MoreFactor| ε
-    private void MoreFactor() {
+    private String MoreFactor(String _inheritedAttrib) {
         if(currentToken.getTokenType() == TokenType.mulop){
+            Symbol tempSymbol = tempVariable();
+            String tacStatement = "";
+            tacStatement = tacStatement.concat(tempSymbol.lexeme + " = " + _inheritedAttrib + " " + currentToken.getLexeme()+" ");
             match(currentToken, TokenType.mulop);
-            Factor();
-            MoreFactor();
+            String synthesizedAttributeofFactor = Factor();
+            tacStatement = tacStatement.concat(synthesizedAttributeofFactor);
+            System.out.println(tacStatement);
+            return MoreFactor(tempSymbol.lexeme);
         }
+        // MoreFactor		->  ε
+        // inheritedAttribute becomes synthesized attribute since
+        return _inheritedAttrib;
     }
 
     // Factor			->	id | num | ( Expr ) | not Factor | SignOp Factor
-    private void Factor() {
+    private String Factor() {
         if(currentToken.getTokenType() == TokenType.id){
             Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
             if(symbol != null && symbol.depth <= _symbolTable.CurrentDepth) {
+                String identifier = currentToken.getLexeme();
                 match(currentToken, TokenType.id);
+                return identifier;
             } else {
                 System.out.println("Error: Undefined identifier " + currentToken.getLexeme() + " at line number " + currentToken.getLineNumber());
                 System.exit(1);
             }
             // todo replace the value of the variable with the value if the variable is constant
         } else if(currentToken.getTokenType() == TokenType.num){
+            Symbol tempSymbol = tempVariable();
+            System.out.println(tempSymbol.lexeme + " = " + currentToken.getLexeme());
+
             match(currentToken, TokenType.num);
+            return tempSymbol.lexeme;
         } else if(currentToken.getTokenType() == TokenType.lparen){
             match(currentToken, TokenType.lparen);
-            Expr();
+            String synthesizedAttributeOfExpr = Expr();
             match(currentToken, TokenType.rparen);
-        } else
+            return synthesizedAttributeOfExpr;
+        } else {
             SignOp();
+        }
+        return null;
     }
 
     // SignOp		    ->	-
     private void SignOp() {
         if(currentToken.getLexeme() == "-"){
+            Symbol tempSymbol = tempVariable();
+            String tacStatement = "";
+            tacStatement = tacStatement.concat(tempSymbol.lexeme + " = -");
             currentToken = tokenizer.getNextToken();
-            Factor();
+            String synthesizedAttributeofFactor = Factor();
+            tacStatement = tacStatement.concat(synthesizedAttributeofFactor);
+            System.out.println(tacStatement);
         }
     }
 
