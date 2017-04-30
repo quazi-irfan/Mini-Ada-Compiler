@@ -147,6 +147,26 @@ public class Symbol {
         else
             return 0;
     }
+
+    public boolean isParameter(){
+        if(variableAttributes != null)
+            return variableAttributes.isParameter;
+        else if(constantAttributes != null)
+            return constantAttributes.isParameter;
+
+        // execution should not reach this point
+        return false;
+    }
+
+    public EParameterModeType getParameterMode(){
+        if(variableAttributes != null)
+            return variableAttributes.parameterMode;
+        else if(constantAttributes != null)
+            return constantAttributes.parameterMode;
+
+        // execution should not reach this point
+        return EParameterModeType.in;
+    }
 }
 
 

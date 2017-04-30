@@ -65,7 +65,8 @@ public class Parser {
         tempSymbol.setOffset(_identifierOffset);
 
         _symbolTable.insert(tempSymbol);
-        _tempVariableID++;
+        _identifierOffset = _identifierOffset + 2; // next temp will get a new offset
+        _tempVariableID++; // increment the postfix temp variable identifier
         return tempSymbol;
     }
     public Parser(String fileName) throws IOException {
@@ -413,7 +414,7 @@ public class Parser {
             System.exit(1);
         }
 
-        String tacStatement = symbol.lexeme;
+        String tacStatement = getSymbolLexemeOrOffset(symbol);
         tacStatement = tacStatement.concat(" = ");
         match(currentToken, TokenType.assignop);
         String synthesizedAttributeofExpe = Expr();
@@ -447,12 +448,12 @@ public class Parser {
         if(currentToken.getTokenType() == TokenType.addop){
             Symbol tempSymbol = tempVariable();
             String tacStatement = "";
-            tacStatement  = tacStatement.concat(tempSymbol.lexeme + " = " + _inheritedAttrib + " " + currentToken.getLexeme()+ " ");
+            tacStatement  = tacStatement.concat(getSymbolLexemeOrOffset(tempSymbol) + " = " + _inheritedAttrib + " " + currentToken.getLexeme()+ " ");
             match(currentToken, TokenType.addop);
             String synthesizedAttributeofTerm = Term();
             tacStatement = tacStatement.concat(synthesizedAttributeofTerm);
             System.out.println(tacStatement);
-            return MoreTerm(tempSymbol.lexeme);
+            return MoreTerm(getSymbolLexemeOrOffset(tempSymbol));
         }
         // MoreTerm		->	ε
         // inheritedAttribute becomes synthesized attribute
@@ -470,12 +471,12 @@ public class Parser {
         if(currentToken.getTokenType() == TokenType.mulop){
             Symbol tempSymbol = tempVariable();
             String tacStatement = "";
-            tacStatement = tacStatement.concat(tempSymbol.lexeme + " = " + _inheritedAttrib + " " + currentToken.getLexeme()+" ");
+            tacStatement = tacStatement.concat(getSymbolLexemeOrOffset(tempSymbol) + " = " + _inheritedAttrib + " " + currentToken.getLexeme()+" ");
             match(currentToken, TokenType.mulop);
             String synthesizedAttributeofFactor = Factor();
             tacStatement = tacStatement.concat(synthesizedAttributeofFactor);
             System.out.println(tacStatement);
-            return MoreFactor(tempSymbol.lexeme);
+            return MoreFactor(getSymbolLexemeOrOffset(tempSymbol));
         }
         // MoreFactor		->  ε
         // inheritedAttribute becomes synthesized attribute since
@@ -485,6 +486,7 @@ public class Parser {
     // Factor			->	id | num | ( Expr ) | not Factor | SignOp Factor
     private String Factor() {
         if(currentToken.getTokenType() == TokenType.id){
+
             Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
             if(symbol != null && symbol.depth <= _symbolTable.CurrentDepth) {
                 String identifier = currentToken.getLexeme();
@@ -496,32 +498,39 @@ public class Parser {
             }
             // todo replace the value of the variable with the value if the variable is constant
         } else if(currentToken.getTokenType() == TokenType.num){
+
             Symbol tempSymbol = tempVariable();
-            System.out.println(tempSymbol.lexeme + " = " + currentToken.getLexeme());
+            System.out.println(getSymbolLexemeOrOffset(tempSymbol) + " = " + currentToken.getLexeme());
 
             match(currentToken, TokenType.num);
-            return tempSymbol.lexeme;
+            return getSymbolLexemeOrOffset(tempSymbol); // todo check if this is correct
         } else if(currentToken.getTokenType() == TokenType.lparen){
+
             match(currentToken, TokenType.lparen);
             String synthesizedAttributeOfExpr = Expr();
             match(currentToken, TokenType.rparen);
             return synthesizedAttributeOfExpr;
         } else {
+
             SignOp();
+            Symbol tempSymbol = tempVariable();
+            String tacStatement = "";
+            tacStatement = tacStatement.concat(getSymbolLexemeOrOffset(tempSymbol) + " = -");
+            String synthesizedAttributeofFactor = Factor();
+            tacStatement = tacStatement.concat(synthesizedAttributeofFactor);
+            System.out.println(tacStatement);
+            return getSymbolLexemeOrOffset(tempSymbol);
         }
         return null;
     }
 
     // SignOp		    ->	-
     private void SignOp() {
-        if(currentToken.getLexeme() == "-"){
-            Symbol tempSymbol = tempVariable();
-            String tacStatement = "";
-            tacStatement = tacStatement.concat(tempSymbol.lexeme + " = -");
+        if(currentToken.getLexeme().charAt(0) == '-'){
             currentToken = tokenizer.getNextToken();
-            String synthesizedAttributeofFactor = Factor();
-            tacStatement = tacStatement.concat(synthesizedAttributeofFactor);
-            System.out.println(tacStatement);
+        } else {
+            System.out.println("Error: Expecting SignOp '-' but found " + currentToken.getLexeme() + " at line number " + currentToken.getLineNumber());
+            System.exit(1);
         }
     }
 
@@ -550,6 +559,23 @@ public class Parser {
 
     public boolean isParsingSuccessful(){
         return isParsingSuccessful;
+    }
+
+    private String getSymbolLexemeOrOffset(Symbol symbol_){
+        if(symbol_.depth > 1){
+            if(symbol_.isParameter()){
+                EParameterModeType mode = symbol_.getParameterMode();
+                if(mode == EParameterModeType.in){
+                    return "_bp+" + symbol_.getOffset();
+                } else {
+                    return "@_bp+" + symbol_.getOffset();
+                }
+            } else {
+                return "_bp-" + symbol_.getOffset();
+            }
+        } else {
+            return symbol_.lexeme;
+        }
     }
 }
 
