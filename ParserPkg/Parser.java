@@ -3,8 +3,6 @@ package ParserPkg;
 import SymbolTablePkg.*;
 import TokenizerPkg.*;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.LinkedList;
@@ -84,8 +82,9 @@ public class Parser {
         _symbolTable = new SymbolTable();
 
         // initialize parsing
-        Prog();
-
+        String outerFunction  = Prog();
+        System.out.println("START PROC " + outerFunction);
+        
         // print the symbol table of global space
 //        _symbolTable.printDepth(_symbolTable.CurrentDepth);
 
@@ -101,12 +100,16 @@ public class Parser {
     }
 
     // This function implements Prog	->	procedure idt Args is DeclarativePart Procedures begin SeqOfStatements end idt;
-    private void Prog(){
+    private String Prog(){
         _identifierOffset = 4; // set it back to 4 for the start of new function
         match(currentToken, TokenType.PROCEDURE);
+
+        // check if procedure name is already been used
         String functionName = currentToken.getLexeme();
-        checkForDuplicateSymbol();
+        checkForDuplicateEntry();
         _symbolTable.insert(functionName, _symbolTable.CurrentDepth).setSymbolType(ESymbolType.function);
+
+        // entering into another procedure scope
         _symbolTable.CurrentDepth++;
         match(currentToken, TokenType.id);
 
@@ -116,13 +119,16 @@ public class Parser {
         DeclarativePart(functionName);
         Procedures();
         match(currentToken, TokenType.BEGIN);
+        System.out.println("START " + functionName);
         SeqOfStatements();
+        System.out.println("ENDP " + functionName);
 
         match(currentToken, TokenType.END);
         if(!functionName.equalsIgnoreCase(currentToken.getLexeme())){
             System.out.println("Error : Missing statement \"END " + functionName+";\"");
             System.exit(1);
         }
+
         // match the start id
         match(currentToken, TokenType.id);
 
@@ -131,6 +137,8 @@ public class Parser {
 //        _symbolTable.printDepth(_symbolTable.CurrentDepth);
         _symbolTable.deleteDepth(_symbolTable.CurrentDepth);
         _symbolTable.CurrentDepth--;
+
+        return functionName;
     }
 
     // This function implements  DeclarativePart	->	IdentifierList : TypeMark ; DeclarativePart | E
@@ -147,7 +155,7 @@ public class Parser {
 
     // This function implements  IdentifierList  -> 	idt IdentifierList`
     private void IdentifierList() {
-        checkForDuplicateSymbol();
+        checkForDuplicateEntry();
 
         // add the lexeme and it's depth of an identifiers to a temporary data structure (identifierList)
         identifierList.add(_symbolTable.insert(currentToken.getLexeme(), _symbolTable.CurrentDepth));
@@ -160,7 +168,7 @@ public class Parser {
     private void IdentifierList_() {
         if(currentToken.getTokenType() == TokenType.comma){
             currentToken = tokenizer.getNextToken();
-            checkForDuplicateSymbol();
+            checkForDuplicateEntry();
 
             // add remaining the lexeme and it's depth of the identifiers to a temporary data structure (identifierList)
             identifierList.add(_symbolTable.insert(currentToken.getLexeme(), _symbolTable.CurrentDepth));
@@ -419,13 +427,8 @@ public class Parser {
     // AssignStat		->	idt  :=  Expr
     private void AssignStat(String identifier_) {
         if(currentToken.getTokenType() == TokenType.assignop) {
-            Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
-            if (symbol != null && symbol.depth <= _symbolTable.CurrentDepth) {
-                match(currentToken, TokenType.id);
-            } else {
-                System.out.println("Error: Undefined identifier " + currentToken.getLexeme() + " at line number " + currentToken.getLineNumber());
-                System.exit(1);
-            }
+            isDefinedIdentifier(identifier_);
+            Symbol symbol = _symbolTable.lookup(identifier_);
 
             String tacStatement = getSymbolLexemeOrOffset(symbol);
             tacStatement = tacStatement.concat(" = ");
@@ -578,24 +581,17 @@ public class Parser {
     // Factor			->	id | num | ( Expr ) | not Factor | SignOp Factor
     private String Factor() {
         if(currentToken.getTokenType() == TokenType.id){
-
-            Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
-            if(symbol != null && symbol.depth <= _symbolTable.CurrentDepth) {
-                String identifier = currentToken.getLexeme();
-                match(currentToken, TokenType.id);
-                return identifier;
-            } else {
-                System.out.println("Error: Undefined identifier " + currentToken.getLexeme() + " at line number " + currentToken.getLineNumber());
-                System.exit(1);
-            }
-            // todo replace the value of the variable with the value if the variable is constant
+            String synthesizedAttributeofFactor = currentToken.getLexeme();
+            isDefinedIdentifier(synthesizedAttributeofFactor);
+            currentToken = tokenizer.getNextToken();
+            return synthesizedAttributeofFactor;
         } else if(currentToken.getTokenType() == TokenType.num){
 
             Symbol tempSymbol = tempVariable();
             System.out.println(getSymbolLexemeOrOffset(tempSymbol) + " = " + currentToken.getLexeme());
 
             match(currentToken, TokenType.num);
-            return getSymbolLexemeOrOffset(tempSymbol); // todo check if this is correct
+            return getSymbolLexemeOrOffset(tempSymbol); // passing back _bp-X up in the tree
         } else if(currentToken.getTokenType() == TokenType.lparen){
 
             match(currentToken, TokenType.lparen);
@@ -613,7 +609,6 @@ public class Parser {
             System.out.println(tacStatement);
             return getSymbolLexemeOrOffset(tempSymbol);
         }
-        return null;
     }
 
     // SignOp		    ->	-
@@ -641,7 +636,7 @@ public class Parser {
         }
     }
 
-    private void checkForDuplicateSymbol() {
+    private void checkForDuplicateEntry() {
         Symbol symbol = _symbolTable.lookup(currentToken.getLexeme());
         if(symbol != null && symbol.depth == _symbolTable.CurrentDepth){
             System.out.println("Error: Duplicate symbol: '" +currentToken.getLexeme() + "' at line number " + currentToken.getLineNumber());
