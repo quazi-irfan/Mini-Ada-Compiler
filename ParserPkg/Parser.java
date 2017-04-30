@@ -72,7 +72,7 @@ public class Parser {
         return tempSymbol;
     }
     public Parser(String fileName) throws IOException {
-        String tacFileName = fileName.substring(0, fileName.length()-3).concat(".tac");
+        String tacFileName = fileName.substring(0, fileName.length()-4).concat(".tac");
         PrintWriter tacWriter = new PrintWriter(tacFileName);
 
         tokenizer = new Tokenizer(fileName);
@@ -84,7 +84,7 @@ public class Parser {
         // initialize parsing
         String outerFunction  = Prog();
         System.out.println("START PROC " + outerFunction);
-        
+
         // print the symbol table of global space
 //        _symbolTable.printDepth(_symbolTable.CurrentDepth);
 
@@ -427,8 +427,7 @@ public class Parser {
     // AssignStat		->	idt  :=  Expr
     private void AssignStat(String identifier_) {
         if(currentToken.getTokenType() == TokenType.assignop) {
-            isDefinedIdentifier(identifier_);
-            Symbol symbol = _symbolTable.lookup(identifier_);
+            Symbol symbol = isDefinedIdentifier(identifier_);
 
             String tacStatement = getSymbolLexemeOrOffset(symbol);
             tacStatement = tacStatement.concat(" = ");
@@ -582,9 +581,10 @@ public class Parser {
     private String Factor() {
         if(currentToken.getTokenType() == TokenType.id){
             String synthesizedAttributeofFactor = currentToken.getLexeme();
-            isDefinedIdentifier(synthesizedAttributeofFactor);
+            Symbol tempSymbol = isDefinedIdentifier(synthesizedAttributeofFactor);
             currentToken = tokenizer.getNextToken();
-            return synthesizedAttributeofFactor;
+            return getSymbolLexemeOrOffset(tempSymbol); // pass back up the identifier
+
         } else if(currentToken.getTokenType() == TokenType.num){
 
             Symbol tempSymbol = tempVariable();
@@ -665,16 +665,16 @@ public class Parser {
         }
     }
 
-    private boolean isDefinedIdentifier(String lexeme_){
+    private Symbol isDefinedIdentifier(String lexeme_){
         Symbol symbol = _symbolTable.lookup(lexeme_);
         if (symbol != null && symbol.depth <= _symbolTable.CurrentDepth) {
-            return true;
+            return symbol;
         } else {
             System.out.println("Error: Undefined identifier " + currentToken.getLexeme() + " at line number " + currentToken.getLineNumber());
             System.exit(1);
         }
 
-        return false;
+        return null;
     }
 }
 
