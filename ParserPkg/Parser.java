@@ -55,7 +55,20 @@ public class Parser {
     private LinkedList<Symbol> identifierList = new LinkedList<>();
     private int _identifierListOffset = 0;
     private int _identifierOffset = 2;
+    private int _tempVariableID = 0;
 
+    private Symbol tempVariable(){
+        String tempVariableName = "_t".concat(Integer.toString(_identifierOffset));
+        Symbol tempSymbol = new Symbol(tempVariableName, _symbolTable.CurrentDepth);
+        tempSymbol.setSymbolType(ESymbolType.variable);
+
+        Symbol.VariableAttributes symbolVariableAttribute = (Symbol.VariableAttributes)tempSymbol.getSymbolAttributes();
+        _identifierOffset = _identifierOffset + 2;
+        symbolVariableAttribute.offset = _identifierOffset;
+
+        _symbolTable.insert(tempSymbol);
+        return tempSymbol;
+    }
     public Parser(String fileName) throws IOException {
         tokenizer = new Tokenizer(fileName);
         currentToken = tokenizer.getNextToken();
