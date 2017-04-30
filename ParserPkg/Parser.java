@@ -29,7 +29,7 @@ import java.util.LinkedList;
  SeqOfStatments	->	Statement  ; StatTail | ε
  StatTail		-> 	Statement  ; StatTail | ε
  Statement		-> 	AssignStat	| IOStat
- AssignStat		->	idt  :=  Expr
+ AssignStat		->	idt  :=  Expr | ProcCall
  IOStat			->	ε
  Expr			->	Relation
  Relation		->	SimpleExpr
@@ -46,6 +46,10 @@ import java.util.LinkedList;
  Mulop			-> 	* | / | mod | rem | and
  SignOp		    ->	-
 
+ ProcCall		->	idt ( Params )
+ Params			->	idt ParamsTail | num ParamsTail | ε
+ ParamsTail		->	, idt ParamsTail | , num ParamsTail | ε
+
  */
 
 public class Parser {
@@ -60,21 +64,10 @@ public class Parser {
     private static int _currentIndexOfFunctionParameter = 0;
     private PrintWriter tacWriter = null;
 
-    private Symbol tempVariable(){
-        String tempVariableName = "_t".concat(Integer.toString(_tempVariableID));
-
-        Symbol tempSymbol = new Symbol(tempVariableName, _symbolTable.CurrentDepth);
-        tempSymbol.setSymbolType(ESymbolType.variable);
-        tempSymbol.setOffset(_identifierOffset);
-
-        _symbolTable.insert(tempSymbol);
-        _identifierOffset = _identifierOffset + 2; // next temp will get a new offset
-        _tempVariableID++; // increment the postfix temp variable identifier
-        return tempSymbol;
-    }
     public Parser(String fileName) throws IOException {
         String tacFileName = fileName.substring(0, fileName.length()-4).concat(".tac");
         tacWriter = new PrintWriter(tacFileName);
+        System.out.println("Writing output to " + tacFileName);
 
         tokenizer = new Tokenizer(fileName);
         currentToken = tokenizer.getNextToken();
@@ -84,6 +77,7 @@ public class Parser {
 
         // initialize parsing
         String outerFunction  = Prog();
+        System.out.println(formattedString(new String[]{"START", "PROC" , outerFunction}));
         tacWriter.println(formattedString(new String[]{"START", "PROC" , outerFunction}));
 
         // print the symbol table of global space
@@ -120,8 +114,10 @@ public class Parser {
         DeclarativePart(functionName);
         Procedures();
         match(currentToken, TokenType.BEGIN);
+        System.out.println(formattedString(new String[]{"START", functionName}));
         tacWriter.println(formattedString(new String[]{"START", functionName}));
         SeqOfStatements();
+        System.out.println(formattedString(new String[]{"ENDP" , functionName}));
         tacWriter.println(formattedString(new String[]{"ENDP" , functionName}));
 
         match(currentToken, TokenType.END);
@@ -434,6 +430,7 @@ public class Parser {
             match(currentToken, TokenType.assignop);
             String synthesizedAttributeofExpe = Expr();
 
+            System.out.println(formattedString(new String[]{variable1, "=", synthesizedAttributeofExpe}));
             tacWriter.println(formattedString(new String[]{variable1, "=", synthesizedAttributeofExpe}));
 
         } else {
@@ -448,6 +445,7 @@ public class Parser {
         Params(procedureName_);
         match(currentToken, TokenType.rparen);
 
+        System.out.println(formattedString(new String[]{"call" , procedureName_}));
         tacWriter.println(formattedString(new String[]{"call" , procedureName_}));
         _currentIndexOfFunctionParameter = 0;
     }
@@ -460,8 +458,10 @@ public class Parser {
 
                 Symbol functionSymbol = _symbolTable.lookup(procedureName_, ESymbolType.function);
                 if(functionSymbol.functionAttributes.parameterModeList.get(_currentIndexOfFunctionParameter) != EParameterModeType.in){
+                    System.out.println(formattedString(new String[]{"push" , "@".concat(currentToken.getLexeme())}));
                     tacWriter.println(formattedString(new String[]{"push" , "@".concat(currentToken.getLexeme())}));
                 } else {
+                    System.out.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                     tacWriter.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                 }
 
@@ -470,6 +470,7 @@ public class Parser {
                 ParamsTail(procedureName_);
 
             } else if (currentToken.getTokenType() == TokenType.num) {
+                System.out.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                 tacWriter.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                 match(currentToken, TokenType.id);
                 _currentIndexOfFunctionParameter++;
@@ -492,8 +493,10 @@ public class Parser {
 
                     Symbol functionSymbol = _symbolTable.lookup(procedureName_, ESymbolType.function);
                     if(functionSymbol.functionAttributes.parameterModeList.get(_currentIndexOfFunctionParameter) != EParameterModeType.in){
+                        System.out.println(formattedString(new String[]{"push" , "@".concat(currentToken.getLexeme())}));
                         tacWriter.println(formattedString(new String[]{"push" , "@".concat(currentToken.getLexeme())}));
                     } else {
+                        System.out.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                         tacWriter.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                     }
 
@@ -502,6 +505,7 @@ public class Parser {
                     ParamsTail(procedureName_);
 
                 } else if(currentToken.getTokenType() == TokenType.num) {
+                    System.out.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                     tacWriter.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
 
                     match(currentToken, TokenType.num);
@@ -546,6 +550,7 @@ public class Parser {
             String operator = currentToken.getLexeme();
             match(currentToken, TokenType.addop);
             String synthesizedAttributeofTerm = Term();
+            System.out.println(formattedString(new String[]{variable1, "=" , _inheritedAttrib, operator, synthesizedAttributeofTerm}));
             tacWriter.println(formattedString(new String[]{variable1, "=" , _inheritedAttrib, operator, synthesizedAttributeofTerm}));
             return MoreTerm(getSymbolLexemeOrOffset(tempSymbol));
         }
@@ -568,6 +573,7 @@ public class Parser {
             String operator = currentToken.getLexeme();
             match(currentToken, TokenType.mulop);
             String synthesizedAttributeofFactor = Factor();
+            System.out.println(formattedString(new String[]{variable1, "=" , _inheritedAttrib, operator, synthesizedAttributeofFactor}));
             tacWriter.println(formattedString(new String[]{variable1, "=" , _inheritedAttrib, operator, synthesizedAttributeofFactor}));
             return MoreFactor(getSymbolLexemeOrOffset(tempSymbol));
         }
@@ -587,6 +593,7 @@ public class Parser {
         } else if(currentToken.getTokenType() == TokenType.num){
 
             Symbol tempSymbol = tempVariable();
+            System.out.println(formattedString(new String[]{getSymbolLexemeOrOffset(tempSymbol), "=", currentToken.getLexeme()}));
             tacWriter.println(formattedString(new String[]{getSymbolLexemeOrOffset(tempSymbol), "=", currentToken.getLexeme()}));
 
             match(currentToken, TokenType.num);
@@ -603,6 +610,7 @@ public class Parser {
             Symbol tempSymbol = tempVariable();
             String variable1 = getSymbolLexemeOrOffset(tempSymbol);
             String synthesizedAttributeofFactor = Factor();
+            System.out.println(formattedString(new String[]{variable1, "=", "-".concat(synthesizedAttributeofFactor)}));
             tacWriter.println(formattedString(new String[]{variable1, "=", "-".concat(synthesizedAttributeofFactor)}));
             return getSymbolLexemeOrOffset(tempSymbol);
         }
@@ -631,6 +639,19 @@ public class Parser {
         } else {
             currentToken = tokenizer.getNextToken();
         }
+    }
+
+    private Symbol tempVariable(){
+        String tempVariableName = "_t".concat(Integer.toString(_tempVariableID));
+
+        Symbol tempSymbol = new Symbol(tempVariableName, _symbolTable.CurrentDepth);
+        tempSymbol.setSymbolType(ESymbolType.variable);
+        tempSymbol.setOffset(_identifierOffset);
+
+        _symbolTable.insert(tempSymbol);
+        _identifierOffset = _identifierOffset + 2; // next temp will get a new offset
+        _tempVariableID++; // increment the postfix temp variable identifier
+        return tempSymbol;
     }
 
     private void checkForDuplicateEntry() {
