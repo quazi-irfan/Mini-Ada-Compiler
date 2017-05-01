@@ -1,6 +1,6 @@
 import ParserPkg.Parser;
-
-import java.io.PrintWriter;
+import SymbolTablePkg.SymbolTable;
+import TACx86Pkg.x86Translator;
 
 /**
  * Quazi Irfan
@@ -15,13 +15,18 @@ public class Main {
             return;
         }
 
-        Parser parser = new Parser(args[0]);
+        String adaFileName = args[0];
+        Parser parser = new Parser(adaFileName);
         if(!parser.isParsingSuccessful()){
-            System.out.println("Parsing " + args[0] + " failed.");
+            System.out.println("Parsing " + adaFileName + " failed.");
             System.exit(1);
         }
 
-//        String asmFileName = args[0].substring(0, args[0].length()-4).concat(".asm");
-//        PrintWriter asmWriter = new PrintWriter(asmFileName);
+        SymbolTable symbolTable = parser.getSymbolTable();
+        String tacFileName = adaFileName.substring(0, adaFileName.length()-4).concat(".tac");
+        x86Translator x86Translator = new x86Translator(tacFileName, symbolTable);
+        if(x86Translator.isSuccessfullyTranslated()){
+            System.out.println("Sucessfully created ASM file.");
+        }
     }
 }

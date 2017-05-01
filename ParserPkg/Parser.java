@@ -729,5 +729,9 @@ public class Parser {
         } else
             return null;
     }
+
+    public SymbolTable getSymbolTable() {
+        return _symbolTable;
+    }
 }
 
