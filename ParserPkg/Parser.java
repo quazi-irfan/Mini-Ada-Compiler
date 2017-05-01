@@ -126,8 +126,8 @@ public class Parser {
         DeclarativePart(functionName);
         Procedures();
         match(currentToken, TokenType.BEGIN);
-        System.out.println(formattedString(new String[]{"START", functionName}));
-        tacWriter.println(formattedString(new String[]{"START", functionName}));
+        System.out.println(formattedString(new String[]{"PROC", functionName}));
+        tacWriter.println(formattedString(new String[]{"PROC", functionName}));
         SeqOfStatements();
         System.out.println(formattedString(new String[]{"ENDP" , functionName}));
         tacWriter.println(formattedString(new String[]{"ENDP" , functionName}));
@@ -578,6 +578,11 @@ public class Parser {
     // 	Write_Token	->	idt | numt | literal
     private void WriteToken() {
         if(currentToken.getTokenType() == TokenType.id || currentToken.getTokenType() == TokenType.num || currentToken.getTokenType() == TokenType.string){ // todo check if id was defined before
+            if(currentToken.getTokenType() == TokenType.id){
+                Symbol tempSymbol = _symbolTable.lookup(currentToken.getLexeme());
+                System.out.println(formattedString(new String[]{"wri", getSymbolLexemeOrOffset(tempSymbol)}));
+                tacWriter.println(formattedString(new String[]{"wri", getSymbolLexemeOrOffset(tempSymbol)}));
+            } // todo find how to deal with PUTLN, and How to print string and new line
             currentToken = tokenizer.getNextToken();
         } else {
             System.out.println("Error: Expecting identifier, number or string literal, but found " + currentToken.getTokenType() + " with lexeme " + currentToken.getLexeme() + " at line " + currentToken.getLineNumber());
@@ -598,7 +603,10 @@ public class Parser {
     //IdList		->	idt  IdListTail
     private void IdList() {
         if(currentToken.getTokenType() == TokenType.id){
-            isDefinedIdentifier(currentToken.getLexeme());
+            Symbol tempSymbol = isDefinedIdentifier(currentToken.getLexeme());
+            System.out.println(formattedString(new String[]{"rdi", getSymbolLexemeOrOffset(tempSymbol)}));
+            tacWriter.println(formattedString(new String[]{"rdi", getSymbolLexemeOrOffset(tempSymbol)}));
+
             match(currentToken, TokenType.id);
             IdListTail();
         } else {
@@ -612,6 +620,11 @@ public class Parser {
         if(currentToken.getTokenType() == TokenType.comma){
             match(currentToken, TokenType.comma);
             isDefinedIdentifier(currentToken.getLexeme());
+
+            Symbol tempSymbol = isDefinedIdentifier(currentToken.getLexeme());
+            System.out.println(formattedString(new String[]{"rdi", getSymbolLexemeOrOffset(tempSymbol)}));
+            tacWriter.println(formattedString(new String[]{"rdi", getSymbolLexemeOrOffset(tempSymbol)}));
+
             match(currentToken, TokenType.id);
             IdListTail();
         }
