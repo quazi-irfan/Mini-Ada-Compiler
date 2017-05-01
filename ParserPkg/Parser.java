@@ -402,7 +402,8 @@ public class Parser {
     // All assignment statement has to start with an identifier token
     // This function implements  SeqOfStatments	->	Statement  ; StatTail | ε
     private void SeqOfStatements() {
-        if(currentToken.getTokenType() == TokenType.id){
+        if(currentToken.getTokenType() == TokenType.id || currentToken.getTokenType() == TokenType.GET ||
+                currentToken.getTokenType() == TokenType.PUT || currentToken.getTokenType() == TokenType.PUTLN){
             Statement();
             match(currentToken, TokenType.semicolon);
             StatTail();
@@ -412,7 +413,8 @@ public class Parser {
 
     // StatTail		-> 	Statement  ; StatTail | ε
     private void StatTail(){
-        if(currentToken.getTokenType() == TokenType.id){
+        if(currentToken.getTokenType() == TokenType.id || currentToken.getTokenType() == TokenType.GET ||
+                currentToken.getTokenType() == TokenType.PUT || currentToken.getTokenType() == TokenType.PUTLN){
             Statement();
             match(currentToken, TokenType.semicolon);
             StatTail();
@@ -533,9 +535,87 @@ public class Parser {
         // ParamsTail -> ε
     }
 
-    // IOStat			->	ε
+    // IOStat	->	InStat | OutStat
     private void IOStat() {
-        return;
+        if(currentToken.getTokenType() == TokenType.GET){
+            InStat();
+        } else {
+            OutStat();
+        }
+    }
+
+    // OutStat	->	put(WriteList) | putln(WriteList)
+    private void OutStat() {
+        if(currentToken.getTokenType() == TokenType.PUT){
+            match(currentToken, TokenType.PUT);
+            match(currentToken, TokenType.lparen);
+            WriteList();
+            match(currentToken, TokenType.rparen);
+        } else if(currentToken.getTokenType() == TokenType.PUTLN){
+            match(currentToken, TokenType.PUTLN);
+            match(currentToken, TokenType.lparen);
+            WriteList();
+            match(currentToken, TokenType.rparen);
+        }
+    }
+
+    // Write_List	->	Write_Token Write_List_Tail
+    private void WriteList() {
+        WriteToken();
+        WriteListTail();
+    }
+
+    // Write_List_Tail ->	, Write_Token Write_List_Tail | ε
+    private void WriteListTail() {
+        if(currentToken.getTokenType() == TokenType.comma){
+            match(currentToken, TokenType.comma);
+            WriteToken();
+            WriteListTail();
+        }
+        // Write_List_Tail -> ε
+    }
+
+    // 	Write_Token	->	idt | numt | literal
+    private void WriteToken() {
+        if(currentToken.getTokenType() == TokenType.id || currentToken.getTokenType() == TokenType.num || currentToken.getTokenType() == TokenType.string){ // todo check if id was defined before
+            currentToken = tokenizer.getNextToken();
+        } else {
+            System.out.println("Error: Expecting identifier, number or string literal, but found " + currentToken.getTokenType() + " with lexeme " + currentToken.getLexeme() + " at line " + currentToken.getLineNumber());
+            System.exit(1);
+        }
+    }
+
+    // In_Stat		->	get(IdList)
+    private void InStat() {
+        if(currentToken.getTokenType() == TokenType.GET){
+            match(currentToken, TokenType.GET);
+            match(currentToken, TokenType.lparen);
+            IdList();
+            match(currentToken, TokenType.rparen);
+        }
+    }
+
+    //IdList		->	idt  IdListTail
+    private void IdList() {
+        if(currentToken.getTokenType() == TokenType.id){
+            isDefinedIdentifier(currentToken.getLexeme());
+            match(currentToken, TokenType.id);
+            IdListTail();
+        } else {
+            System.out.println("Error: Expecting identifier token, but found " + currentToken.getTokenType() + " with lexeme " + currentToken.getLexeme() + " at line " + currentToken.getLineNumber());
+            System.exit(1);
+        }
+    }
+
+    // IdListTail	->	, idt IdListTail | ε
+    private void IdListTail() {
+        if(currentToken.getTokenType() == TokenType.comma){
+            match(currentToken, TokenType.comma);
+            isDefinedIdentifier(currentToken.getLexeme());
+            match(currentToken, TokenType.id);
+            IdListTail();
+        }
+        // IdListTail	->	ε
     }
 
     // Expr			->	Relation

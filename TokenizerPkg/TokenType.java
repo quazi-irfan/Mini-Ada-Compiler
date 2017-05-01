@@ -6,7 +6,7 @@ package TokenizerPkg;
 
 public enum TokenType {
     BEGIN, MODULE, CONSTANT, PROCEDURE, IS, IF, THEN, ELSE,
-    ELSIF, WHILE, LOOP, FLOAT, INTEGER, CHAR, GET, PUT, END, NOT,
+    ELSIF, WHILE, LOOP, FLOAT, INTEGER, CHAR, GET, PUT, END, NOT, PUTLN,
 
     id,
     num,
