@@ -16,6 +16,7 @@ public class Symbol {
     public VariableAttributes variableAttributes;
     public ConstantAttributes constantAttributes;
     public FunctionAttributes functionAttributes;
+    public StringAttributes stringAttributes;
 
     public Symbol(String lexeme, int depth) {
         this.lexeme = lexeme;
@@ -77,6 +78,15 @@ public class Symbol {
         }
     }
 
+    public class StringAttributes implements SymbolAttributes{
+        public String attribute;
+
+        @Override
+        public String toString(){
+            return "String identifier: " + Symbol.this.lexeme + ", attribute :" + StringAttributes.this.attribute;
+        }
+    }
+
     // getter and setter to set and get the symbolType of the symbol table
     public void setSymbolType(ESymbolType type_) {
         this.symbolType = type_;
@@ -84,6 +94,8 @@ public class Symbol {
             variableAttributes = new VariableAttributes();
         else if(this.symbolType == ESymbolType.constant)
             constantAttributes = new ConstantAttributes();
+        else if(this.symbolType == ESymbolType.string)
+            stringAttributes = new StringAttributes();
         else{
             functionAttributes = new FunctionAttributes();
             functionAttributes.parameterTypeList = new LinkedList<>();
@@ -96,6 +108,8 @@ public class Symbol {
             return ESymbolType.variable;
         else if(constantAttributes != null)
             return ESymbolType.constant;
+        else if(stringAttributes != null)
+            return ESymbolType.string;
         else if(functionAttributes != null)
             return ESymbolType.function;
         else // all are null
@@ -107,6 +121,8 @@ public class Symbol {
             return variableAttributes;
         else if(constantAttributes != null)
             return constantAttributes;
+        else if(stringAttributes != null)
+            return stringAttributes;
         else if(functionAttributes != null)
             return functionAttributes;
         else // all are null

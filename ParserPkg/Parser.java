@@ -61,6 +61,7 @@ public class Parser {
     private int _identifierListOffset = 0;
     private int _identifierOffset = 2;
     private int _tempVariableID = 0;
+    private int _tempStringID = 0;
     private static int _currentIndexOfFunctionParameter = 0;
     private PrintWriter tacWriter = null;
 
@@ -69,11 +70,22 @@ public class Parser {
         tacWriter = new PrintWriter(tacFileName);
         System.out.println("Writing output to " + tacFileName);
 
-        tokenizer = new Tokenizer(fileName);
-        currentToken = tokenizer.getNextToken();
-
         // initialize symbol table before parsing
         _symbolTable = new SymbolTable();
+
+        tokenizer = new Tokenizer(fileName);
+
+        // Add all string tokens to global space
+        for(Token token : tokenizer.getTokenList()){
+            if(token.getTokenType() == TokenType.string){
+                Symbol stringSymbol = _symbolTable.insert(tempString(), 1);
+                stringSymbol.setSymbolType(ESymbolType.string);
+                stringSymbol.stringAttributes.attribute = (String)token.getAttribute();
+            }
+        }
+
+        // initialize CurrentToken variable
+        currentToken = tokenizer.getNextToken();
 
         // initialize parsing
         String outerFunction  = Prog();
@@ -652,6 +664,10 @@ public class Parser {
         _identifierOffset = _identifierOffset + 2; // next temp will get a new offset
         _tempVariableID++; // increment the postfix temp variable identifier
         return tempSymbol;
+    }
+
+    private String tempString(){
+        return "_s".concat(Integer.toString(_tempStringID++));
     }
 
     private void checkForDuplicateEntry() {

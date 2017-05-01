@@ -2,5 +2,5 @@ package SymbolTablePkg;
 
 // Symbol Type enum
 public enum ESymbolType {
-    variable, constant, function;
+    variable, constant, function, string;
 }

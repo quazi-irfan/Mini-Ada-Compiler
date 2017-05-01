@@ -1,10 +1,12 @@
 import ParserPkg.Parser;
 
+import java.io.PrintWriter;
+
 /**
  * Quazi Irfan
  * Compiler
- * Assignment 5
- * Add symbol to symbol table during recursive descent parsing
+ * Assignment 8
+ * Compiling TAC to ASM
  */
 
 public class Main {
@@ -15,7 +17,12 @@ public class Main {
         }
 
         Parser parser = new Parser(args[0]);
-        if(parser.isParsingSuccessful())
-            System.out.println("Parsing successful.");
+        if(!parser.isParsingSuccessful()){
+            System.out.println("Parsing " + args[0] + " failed.");
+            System.exit(1);
+        }
+
+//        String asmFileName = args[0].substring(0, args[0].length()-4).concat(".asm");
+//        PrintWriter asmWriter = new PrintWriter(asmFileName);
     }
 }
