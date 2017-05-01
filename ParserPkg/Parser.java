@@ -144,7 +144,8 @@ public class Parser {
         match(currentToken, TokenType.semicolon);
 
 //        _symbolTable.printDepth(_symbolTable.CurrentDepth);
-        _symbolTable.deleteDepth(_symbolTable.CurrentDepth);
+        if(_symbolTable.CurrentDepth > 1) // do not delete the global variables, since we will need them during x86 translation
+            _symbolTable.deleteDepth(_symbolTable.CurrentDepth);
         _symbolTable.CurrentDepth--;
 
         return functionName;

@@ -104,6 +104,22 @@ public class SymbolTable {
         }
     }
 
+    public ArrayList<Symbol> lookup(int depth_){
+        ArrayList<Symbol> listOfSymbols = new ArrayList<>();
+        for(int i = 0; i< TableSize; i++){
+            LinkedList<Symbol> linkedList = _hashTable.get(i);
+            if(linkedList != null){
+                for(int j = 0; j<linkedList.size(); j++){
+                    Symbol symbol = linkedList.get(j);
+                    if(symbol.depth == depth_)
+                        listOfSymbols.add(symbol);
+                }
+            }
+        }
+
+        return listOfSymbols;
+    }
+
     /**
      * Delete a given depth_. Only the current depth_ is allowed to be deleted.
      * @param depth_ the desired depth_

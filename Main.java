@@ -22,11 +22,11 @@ public class Main {
             System.exit(1);
         }
 
-//        SymbolTable symbolTable = parser.getSymbolTable();
-//        String tacFileName = adaFileName.substring(0, adaFileName.length()-4).concat(".tac");
-//        x86Translator x86Translator = new x86Translator(tacFileName, symbolTable);
-//        if(x86Translator.isSuccessfullyTranslated()){
-//            System.out.println("Sucessfully created ASM file.");
-//        }
+        SymbolTable symbolTable = parser.getSymbolTable();
+        String tacFileName = adaFileName.substring(0, adaFileName.length()-4).concat(".tac");
+        x86Translator x86Translator = new x86Translator(tacFileName, symbolTable);
+        if(x86Translator.isSuccessfullyTranslated()){
+            System.out.println("Sucessfully created ASM file.");
+        }
     }
 }
