@@ -1,5 +1,6 @@
 package TACx86Pkg;
 
+import SymbolTablePkg.EParameterModeType;
 import SymbolTablePkg.ESymbolType;
 import SymbolTablePkg.Symbol;
 import SymbolTablePkg.SymbolTable;
@@ -41,10 +42,12 @@ public class x86Translator {
             // tac file never should be empty, so statement will never receive null
             statement = tacReader.readLine();
             if(statement == null) break;
+            asmWriter.println("\n\t\t;" + statement);
 
             StringTokenizer tokenizer = new StringTokenizer(statement);
             String firstToken = tokenizer.nextToken();
 
+            // PROC statement
             if(firstToken.equals("PROC")) {
                 String funcName = tokenizer.nextToken();
                 Symbol symbol = this.symbolTable.lookup(funcName, ESymbolType.function);
@@ -52,35 +55,113 @@ public class x86Translator {
 
                 continue;
             }
-
-            /*
-            2 types of assignment
-            x = y op z
-            x = op y
-
-            copy statement
-            x = y
-
-            x = y op z
-            can be +,-,*,/
-             */
-
-            if(firstToken.equals("ENDP")) {
+            // ENDP statement
+            else if(firstToken.equals("ENDP")) {
                 String funcName = tokenizer.nextToken();
                 Symbol symbol = this.symbolTable.lookup(funcName, ESymbolType.function);
                 asmWriter.println(x86Templates.postTranslatedCode(funcName, symbol.functionAttributes.sizeOfLocalVariable, symbol.functionAttributes.sizeOfParameters));
 
                 continue;
             }
-
-            if(firstToken.equals("START")){
+            // START statement
+            else if(firstToken.equals("START")){
                 tokenizer.nextToken();
                 String funcName = tokenizer.nextToken();
                 asmWriter.println(x86Templates.mainProcedure(funcName));
+
+                continue;
+            }
+
+            // push statement
+            else if(firstToken.equals("push")){
+                String var = fixBP(tokenizer.nextToken());
+                asmWriter.println(x86Templates.pushTemplate(var));
+
+                continue;
+            }
+
+            // call statement
+            else if(firstToken.equals("call")){
+                String var = tokenizer.nextToken();
+                asmWriter.println("\t\tcall " + var);
+
+                continue;
+            }
+
+            // Output statement
+            else if(firstToken.length() > 2 && firstToken.substring(0, 2).equals("wr")){
+                if(firstToken.charAt(2) == 'i'){
+                    String var1 = fixBP(tokenizer.nextToken());
+                    asmWriter.println(x86Templates.writeInteger(var1));
+                } else {
+
+                }
+
+                continue;
+            }
+
+            // Input statement
+            else if(firstToken.length() > 2 && firstToken.substring(0, 2).equals("rd")){
+
+                continue;
+            }
+
+            // Assignment statement #1 : x = y op z
+            else if(statement.length() > 38){
+                String var1 = fixBP(firstToken);
+                tokenizer.nextToken();
+                String var2 = fixBP(tokenizer.nextToken());
+                String operator = fixBP(tokenizer.nextToken());
+                String var3 = fixBP(tokenizer.nextToken());
+
+                if(operator.equals("+")){
+                    asmWriter.println(x86Templates.additionTemplate(var1,var2,var3));
+                } else if(operator.equals("-")){
+
+                } else if(operator.equals("*")){
+                    asmWriter.println(x86Templates.multiplicationTemplate(var1,var2,var3));
+                } else if(operator.equals("/")){
+
+                }
+
+                continue;
+            }
+
+            // Assignment statement #2 : x = op y
+            else if(statement.length() > 22 && (statement.charAt(16) == '-' || statement.charAt(16) == '+')){
+
+                continue;
+            }
+
+            // Assignment Statement #3 : @x = y OR @x = y + z
+            else if(statement.charAt(0) == '@'){
+
+                continue;
+            }
+
+            // copy statement x = y
+            else {
+                String var1 = fixBP(firstToken);
+                tokenizer.nextToken();
+                String var2 = fixBP(tokenizer.nextToken());
+
+                asmWriter.println(x86Templates.copyTemplate(var1, var2));
+
+                continue; // redundant
             }
         } while (statement != null);
 
         asmWriter.close();
+    }
+
+    private String fixBP(String var) {
+        StringBuilder builder;
+        if(var.contains("bp")){
+            builder = new StringBuilder();
+            builder.append("[").append(var.substring(1, var.length())).append("]");
+            return builder.toString();
+        }
+        return var;
     }
 
     public boolean isSuccessfullyTranslated() {
