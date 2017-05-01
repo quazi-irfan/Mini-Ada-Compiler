@@ -23,4 +23,15 @@ public class x86Templates {
                                         funcName + " ENDP";
         return postTranslatedCode;
     }
+
+    public static String mainProcedure(String funcName){
+        String mainProcedure =  "main\t\tPROC\n" +
+                                "\t\tmov ax, @data\n" +
+                                "\t\tmov ds, ax\n" +
+                                "\t\tcall "+ funcName +"\n" +
+                                "\t\tmov ah, 4ch\n" +
+                                "\t\tint 21h\n" +
+                                "\t\tmain ENDP";
+        return mainProcedure;
+    }
 }

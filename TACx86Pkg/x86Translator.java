@@ -72,6 +72,12 @@ public class x86Translator {
 
                 continue;
             }
+
+            if(firstToken.equals("START")){
+                tokenizer.nextToken();
+                String funcName = tokenizer.nextToken();
+                asmWriter.println(x86Templates.mainProcedure(funcName));
+            }
         } while (statement != null);
 
         asmWriter.close();
