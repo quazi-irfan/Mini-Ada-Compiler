@@ -80,7 +80,7 @@ public class Parser {
             if(token.getTokenType() == TokenType.string){
                 Symbol stringSymbol = _symbolTable.insert(tempString(), 1);
                 stringSymbol.setSymbolType(ESymbolType.string);
-                stringSymbol.stringAttributes.attribute = (String)token.getAttribute();
+                stringSymbol.stringAttributes.attribute = ((String)token.getAttribute()).concat(",\"$\"");
             }
         }
 
