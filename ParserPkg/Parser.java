@@ -557,6 +557,8 @@ public class Parser {
             WriteList();
             match(currentToken, TokenType.rparen);
         }
+        System.out.println(formattedString(new String[]{"wrln"}));
+        tacWriter.println(formattedString(new String[]{"wrln"}));
     }
 
     // Write_List	->	Write_Token Write_List_Tail
