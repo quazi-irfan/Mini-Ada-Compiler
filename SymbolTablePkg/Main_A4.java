@@ -3,8 +3,7 @@ package SymbolTablePkg;
 /**
  * Quazi Irfan
  * Compiler
- * Assignment 4
- * Symbol Table
+ * Assignment 4 : Write a module that will maintain a symbol table for your mini Ada compiler
  */
 
 /* Given program:
@@ -31,7 +30,7 @@ package SymbolTablePkg;
     END one;
  */
 
-public class Main {
+public class Main_A4 {
     public static void main(String[] args) throws Exception {
         SymbolTable st = new SymbolTable();
 

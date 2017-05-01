@@ -5,11 +5,10 @@ import java.io.IOException;
 /**
  * Quazi Irfan
  * Compiler
- * Assignment 1
- * Lexical analyzer for a subset of Ada
+ * Assignment 1 : Write a Lexical Analyzer for a subset of the Ada programming language
  */
 
-public class Main {
+public class Main_A1 {
     public static void main(String[] args) throws IOException{
         if(args.length < 1){
             System.out.println("Enter input file name as 2nd argument.");

@@ -5,8 +5,7 @@ import java.io.PrintWriter;
 /**
  * Quazi Irfan
  * Compiler
- * Assignment 8
- * Compiling TAC to ASM
+ * Assignment 8 : Translate your Three Address Code into 8086 assembly language.
  */
 
 public class Main {
