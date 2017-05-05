@@ -64,6 +64,8 @@ public class Parser {
     private int _tempStringID = 0;
     private static int _currentIndexOfFunctionParameter = 0;
     private PrintWriter tacWriter = null;
+    private String _currentProcedureName;
+    private String _startProcedure;
 
     public Parser(String fileName) throws IOException {
         String tacFileName = fileName.substring(0, fileName.length()-4).concat(".tac");
@@ -78,9 +80,14 @@ public class Parser {
         // Add all string tokens to global space
         for(Token token : tokenizer.getTokenList()){
             if(token.getTokenType() == TokenType.string){
-                Symbol stringSymbol = _symbolTable.insert(tempString(), 1);
+                String stringPlaceholder = "_s".concat(Integer.toString(_tempStringID++));
+                Symbol stringSymbol = _symbolTable.insert(stringPlaceholder, 1); //todo Optimization : I do not check if old string can be reused.
                 stringSymbol.setSymbolType(ESymbolType.string);
-                stringSymbol.stringAttributes.attribute = ((String)token.getAttribute()).concat(",\"$\"");
+
+                String stringX86Lexeme =  "\"".concat((String)token.getAttribute()).concat("\"").concat(",\"$\"");
+                stringSymbol.stringAttributes.attribute = stringX86Lexeme;
+
+                token.setLexeme(stringPlaceholder);
             }
         }
 
@@ -88,9 +95,9 @@ public class Parser {
         currentToken = tokenizer.getNextToken();
 
         // initialize parsing
-        String outerFunction  = Prog();
-        System.out.println(formattedString(new String[]{"START", "PROC" , outerFunction}));
-        tacWriter.println(formattedString(new String[]{"START", "PROC" , outerFunction}));
+        Prog();
+        System.out.println(formattedString(new String[]{"START", "PROC" , _startProcedure}));
+        tacWriter.println(formattedString(new String[]{"START", "PROC" , _startProcedure}));
 
         // print the symbol table of global space
 //        _symbolTable.printDepth(_symbolTable.CurrentDepth);
@@ -107,34 +114,37 @@ public class Parser {
     }
 
     // This function implements Prog	->	procedure idt Args is DeclarativePart Procedures begin SeqOfStatements end idt;
-    private String Prog(){
+    private void Prog(){
         _identifierOffset = 4; // set it back to 4 for the start of new function
         match(currentToken, TokenType.PROCEDURE);
 
-        // check if procedure name is already been used
-        String functionName = currentToken.getLexeme();
+        if(_symbolTable.CurrentDepth == 0)
+            _startProcedure = currentToken.getLexeme();
+
+        _currentProcedureName = currentToken.getLexeme();
+
         checkForDuplicateEntry();
-        _symbolTable.insert(functionName, _symbolTable.CurrentDepth).setSymbolType(ESymbolType.function);
+        _symbolTable.insert(_currentProcedureName, _symbolTable.CurrentDepth).setSymbolType(ESymbolType.function);
 
         // entering into another procedure scope
         _symbolTable.CurrentDepth++;
         match(currentToken, TokenType.id);
 
-        Args(functionName);
+        Args(_currentProcedureName);
         match(currentToken, TokenType.IS);
         _identifierOffset = 2; // set it back to 2 for local variable offset
-        DeclarativePart(functionName);
+        DeclarativePart(_currentProcedureName);
         Procedures();
         match(currentToken, TokenType.BEGIN);
-        System.out.println(formattedString(new String[]{"PROC", functionName}));
-        tacWriter.println(formattedString(new String[]{"PROC", functionName}));
+        System.out.println(formattedString(new String[]{"PROC", _currentProcedureName}));
+        tacWriter.println(formattedString(new String[]{"PROC", _currentProcedureName}));
         SeqOfStatements();
-        System.out.println(formattedString(new String[]{"ENDP" , functionName}));
-        tacWriter.println(formattedString(new String[]{"ENDP" , functionName}));
+        System.out.println(formattedString(new String[]{"ENDP" , _currentProcedureName}));
+        tacWriter.println(formattedString(new String[]{"ENDP" , _currentProcedureName}));
 
         match(currentToken, TokenType.END);
-        if(!functionName.equalsIgnoreCase(currentToken.getLexeme())){
-            System.out.println("Error: Missing statement \"END " + functionName+";\"");
+        if(!_currentProcedureName.equalsIgnoreCase(currentToken.getLexeme())){
+            System.out.println("Error: Missing statement \"END " + _currentProcedureName+";\"");
             System.exit(1);
         }
 
@@ -146,9 +156,11 @@ public class Parser {
 //        _symbolTable.printDepth(_symbolTable.CurrentDepth);
         if(_symbolTable.CurrentDepth > 1) // do not delete the global variables, since we will need them during x86 translation
             _symbolTable.deleteDepth(_symbolTable.CurrentDepth);
+
         _symbolTable.CurrentDepth--;
 
-        return functionName;
+        // todo Hack : leaving the scope, since we won't have multiple nested function, we will always go back to the start produre
+        _currentProcedureName = _startProcedure;
     }
 
     // This function implements  DeclarativePart	->	IdentifierList : TypeMark ; DeclarativePart | E
@@ -557,9 +569,11 @@ public class Parser {
             match(currentToken, TokenType.lparen);
             WriteList();
             match(currentToken, TokenType.rparen);
+
+            // putln prints a new line at the end
+            System.out.println(formattedString(new String[]{"wrln"}));
+            tacWriter.println(formattedString(new String[]{"wrln"}));
         }
-        System.out.println(formattedString(new String[]{"wrln"}));
-        tacWriter.println(formattedString(new String[]{"wrln"}));
     }
 
     // Write_List	->	Write_Token Write_List_Tail
@@ -585,7 +599,11 @@ public class Parser {
                 Symbol tempSymbol = _symbolTable.lookup(currentToken.getLexeme());
                 System.out.println(formattedString(new String[]{"wri", getSymbolLexemeOrOffset(tempSymbol)}));
                 tacWriter.println(formattedString(new String[]{"wri", getSymbolLexemeOrOffset(tempSymbol)}));
-            } // todo find how to deal with PUTLN, and How to print string and new line
+            } else if(currentToken.getTokenType() == TokenType.string){
+                Symbol tempSymbol = _symbolTable.lookup(currentToken.getLexeme());
+                System.out.println(formattedString(new String[]{"wrs", tempSymbol.lexeme}));
+                tacWriter.println(formattedString(new String[]{"wrs", tempSymbol.lexeme}));
+            }
             currentToken = tokenizer.getNextToken();
         } else {
             System.out.println("Error: Expecting identifier, number or string literal, but found " + currentToken.getTokenType() + " with lexeme " + currentToken.getLexeme() + " at line " + currentToken.getLineNumber());
@@ -653,7 +671,7 @@ public class Parser {
     // MoreTerm		->	Addop Term MoreTerm | ε
     private String MoreTerm(String _inheritedAttrib) {
         if(currentToken.getTokenType() == TokenType.addop){
-            Symbol tempSymbol = tempVariable();
+            Symbol tempSymbol = tempVariable(_currentProcedureName);
             String variable1 = getSymbolLexemeOrOffset(tempSymbol);
             String operator = currentToken.getLexeme();
             match(currentToken, TokenType.addop);
@@ -676,7 +694,7 @@ public class Parser {
     // MoreFactor		->  Mulop Factor MoreFactor| ε
     private String MoreFactor(String _inheritedAttrib) {
         if(currentToken.getTokenType() == TokenType.mulop){
-            Symbol tempSymbol = tempVariable();
+            Symbol tempSymbol = tempVariable(_currentProcedureName);
             String variable1 = getSymbolLexemeOrOffset(tempSymbol);
             String operator = currentToken.getLexeme();
             match(currentToken, TokenType.mulop);
@@ -700,7 +718,7 @@ public class Parser {
 
         } else if(currentToken.getTokenType() == TokenType.num){
 
-            Symbol tempSymbol = tempVariable();
+            Symbol tempSymbol = tempVariable(_currentProcedureName);
             System.out.println(formattedString(new String[]{getSymbolLexemeOrOffset(tempSymbol), "=", currentToken.getLexeme()}));
             tacWriter.println(formattedString(new String[]{getSymbolLexemeOrOffset(tempSymbol), "=", currentToken.getLexeme()}));
 
@@ -715,7 +733,7 @@ public class Parser {
         } else {
 
             SignOp();
-            Symbol tempSymbol = tempVariable();
+            Symbol tempSymbol = tempVariable(_currentProcedureName);
             String variable1 = getSymbolLexemeOrOffset(tempSymbol);
             String synthesizedAttributeofFactor = Factor();
             System.out.println(formattedString(new String[]{variable1, "=", "-".concat(synthesizedAttributeofFactor)}));
@@ -749,7 +767,7 @@ public class Parser {
         }
     }
 
-    private Symbol tempVariable(){
+    private Symbol tempVariable(String funcName_){
         String tempVariableName = "_t".concat(Integer.toString(_tempVariableID));
 
         Symbol tempSymbol = new Symbol(tempVariableName, _symbolTable.CurrentDepth);
@@ -757,13 +775,12 @@ public class Parser {
         tempSymbol.setOffset(_identifierOffset);
 
         _symbolTable.insert(tempSymbol);
+
+        _symbolTable.lookup(funcName_, ESymbolType.function).functionAttributes.sizeOfLocalVariable += 2;
+
         _identifierOffset = _identifierOffset + 2; // next temp will get a new offset
         _tempVariableID++; // increment the postfix temp variable identifier
         return tempSymbol;
-    }
-
-    private String tempString(){
-        return "_s".concat(Integer.toString(_tempStringID++));
     }
 
     private void checkForDuplicateEntry() {
