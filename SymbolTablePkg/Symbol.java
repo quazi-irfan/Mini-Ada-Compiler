@@ -183,6 +183,18 @@ public class Symbol {
         // execution should not reach this point
         return EParameterModeType.in;
     }
+
+    public String getConstantValue(){ //todo generic value fetching
+        if(constantAttributes != null){
+            if(constantAttributes.typeOfConstant == EVariableType.integerType){
+                return Integer.toString(constantAttributes.value);
+            } else {
+                return Float.toString(constantAttributes.valueR);
+            }
+        }
+
+        return null;
+    }
 }
 
 

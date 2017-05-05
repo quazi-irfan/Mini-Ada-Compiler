@@ -30,10 +30,12 @@ public class x86Translator {
         asmWriter.println(x86Templates.preGlobalVariables);
         for(Symbol symbol : symbolTable.lookup(1)){
             if(symbol.getSymbolType() != ESymbolType.function)
-            if(symbol.getSymbolType() == ESymbolType.string)
-                asmWriter.println(formattedString(new String[]{symbol.lexeme, "db", symbol.stringAttributes.attribute}));
-            else
-                asmWriter.println(formattedString(new String[]{symbol.lexeme, "dw", "?"}));
+                if(symbol.getSymbolType() == ESymbolType.string)
+                    asmWriter.println(formattedString(new String[]{symbol.lexeme, "db", symbol.stringAttributes.attribute}));
+                else if(symbol.getSymbolType() == ESymbolType.constant)
+                    asmWriter.println(formattedString(new String[]{symbol.lexeme, "dw", symbol.getConstantValue()}));
+                else
+                    asmWriter.println(formattedString(new String[]{symbol.lexeme, "dw", "?"}));
         }
         asmWriter.println(x86Templates.postGlobalVariables);
 
