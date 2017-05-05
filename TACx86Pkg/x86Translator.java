@@ -160,7 +160,7 @@ public class x86Translator {
             builder = new StringBuilder();
 
             if(var.contains("@"))
-                builder.append("[").append(var.substring(2, var.length())).append("]"); // @_bp-2 becomes @[bp-2]
+                builder.append("@[").append(var.substring(2, var.length())).append("]"); // @_bp-2 becomes @[bp-2]
             else
                 builder.append("[").append(var.substring(1, var.length())).append("]"); // _bp-2 becomes [bp-2]
 

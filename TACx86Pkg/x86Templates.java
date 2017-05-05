@@ -65,21 +65,62 @@ public class x86Templates {
     }
 
     public static String copyTemplate(String var1, String var2){
-        String copyTemplate =   "\t\tmov ax," + var2 + "\n" +
-                "\t\tmov " + var1 + " , ax";
+        String copyTemplate = "";
+        if(var2.charAt(0) == '@'){
+            copyTemplate = copyTemplate.concat("\t\tmov bx, ").concat(var2.substring(1, var2.length())).concat("\n");
+            copyTemplate = copyTemplate.concat("\t\tmov ax, [bx]\n");
+        } else {
+            copyTemplate = copyTemplate.concat("\t\tmov ax, ").concat(var2).concat("\n");;
+        }
+
+        if(var1.charAt(0) == '@'){
+            copyTemplate = copyTemplate.concat("\t\tmov bx, ").concat(var1.substring(1, var1.length())).concat("\n");
+            copyTemplate = copyTemplate.concat("\t\tmov [bx], ax");
+        } else {
+            copyTemplate = copyTemplate.concat("\t\tmov ").concat(var1).concat(" , ax");
+        }
         return copyTemplate;
     }
 
     public static String additionTemplate(String var1, String var2, String var3){
-        String additionTemplate =   "\t\tmov ax, " + var2 + "\n" +
-                "\t\tadd ax, " + var3 + "\n" +
-                "\t\tmov " + var1 + " , ax";
+        String additionTemplate = "";
+
+        if(var2.charAt(0) == '@') {
+            additionTemplate = additionTemplate.concat("\t\tmov bx,").concat(var2.substring(1, var2.length())).concat("\n");
+            additionTemplate = additionTemplate.concat("\t\tmov ax, [bx]").concat("\n");
+        } else {
+            additionTemplate = additionTemplate.concat("\t\tmov ax, ").concat(var2).concat("\n");
+        }
+
+        if(var3.charAt(0) == '@') {
+            additionTemplate = additionTemplate.concat("\t\tmov bx,").concat(var3.substring(1, var3.length())).concat("\n");
+            additionTemplate = additionTemplate.concat("\t\tadd ax, [bx]").concat("\n");
+        } else {
+            additionTemplate = additionTemplate.concat("\t\tadd ax, ").concat(var3).concat("\n");
+        }
+
+        if(var1.charAt(0) == '@'){
+            additionTemplate = additionTemplate.concat("\t\tmov bx,").concat(var1.substring(1, var1.length())).concat("\n");
+            additionTemplate = additionTemplate.concat("\t\tmov [bx], ax");
+        } else {
+            additionTemplate = additionTemplate.concat("\t\tmov ").concat(var1).concat(" , ax");
+        }
+
         return additionTemplate;
     }
 
     public static String writeInteger(String var1){
-        String writeIntegerTemplate =   "\t\tmov ax, " + var1 + "\n" +
-                "\t\tcall writeint";
+        String writeIntegerTemplate ="";
+
+        if(var1.charAt(0) == '@') {
+            writeIntegerTemplate = writeIntegerTemplate.concat("\t\tmov bx, ").concat(var1.substring(1, var1.length())).concat("\n");
+            writeIntegerTemplate = writeIntegerTemplate.concat("\t\tmov ax, [bx]").concat("\n");
+        } else {
+            writeIntegerTemplate = writeIntegerTemplate.concat("\t\tmov ax, ").concat(var1).concat("\n");
+        }
+
+        writeIntegerTemplate = writeIntegerTemplate.concat("\t\tcall writeint");
+
         return writeIntegerTemplate;
     }
 }
