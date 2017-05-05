@@ -36,27 +36,9 @@ public class x86Templates {
         return mainProcedure;
     }
 
-    public static String additionTemplate(String var1, String var2, String var3){
-        String additionTemplate =   "\t\tmov ax, " + var2 + "\n" +
-                                    "\t\tadd ax, " + var3 + "\n" +
-                                    "\t\tmov " + var1 + " , ax";
-        return additionTemplate;
-    }
-
-    public static String copyTemplate(String var1, String var2){
-        String copyTemplate =   "\t\tmov ax," + var2 + "\n" +
-                                "\t\tmov " + var1 + " , ax";
-        return copyTemplate;
-    }
-
-    public static String writeInteger(String var1){
-        String writeIntegerTemplate =   "\t\tmov dx, " + var1 + "\n" +
-                                        "\t\tcall writeint";
-        return writeIntegerTemplate;
-    }
-
     public static String pushTemplate(String var1){
-        String pushTemplate =   "\t\tmov ax, "+ (var1.charAt(0) == '@' ? "offset" : "") + var1 + "\n"+
+        String withOffset = "offset ".concat(var1.substring(1, var1.length()));
+        String pushTemplate =   "\t\tmov ax, "+ (var1.charAt(0) == '@' ? withOffset : var1) + "\n"+
                                 "\t\tpush ax";
         return pushTemplate;
     }
@@ -67,5 +49,37 @@ public class x86Templates {
                                             "\t\timul bx\n" +
                                             "\t\tmov " + var1 + ", ax ";
         return multiplicationTemplate;
+    }
+
+    public static String writeString(String var1) {
+        String writeStringTemplate =   "\t\tmov dx, offset " + var1 + "\n" +
+                                        "\t\tcall writestr";
+        return writeStringTemplate;
+    }
+
+    public static String readInt(String var1) {
+        String readIntegerTemplate =   "\t\tcall readint\n" +
+                                        "\t\tmov ax, bx\n" +
+                                        "\t\tmov " + var1 + " , ax";
+        return readIntegerTemplate;
+    }
+
+    public static String copyTemplate(String var1, String var2){
+        String copyTemplate =   "\t\tmov ax," + var2 + "\n" +
+                "\t\tmov " + var1 + " , ax";
+        return copyTemplate;
+    }
+
+    public static String additionTemplate(String var1, String var2, String var3){
+        String additionTemplate =   "\t\tmov ax, " + var2 + "\n" +
+                "\t\tadd ax, " + var3 + "\n" +
+                "\t\tmov " + var1 + " , ax";
+        return additionTemplate;
+    }
+
+    public static String writeInteger(String var1){
+        String writeIntegerTemplate =   "\t\tmov ax, " + var1 + "\n" +
+                "\t\tcall writeint";
+        return writeIntegerTemplate;
     }
 }

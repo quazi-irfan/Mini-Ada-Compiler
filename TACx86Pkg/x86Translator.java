@@ -88,13 +88,18 @@ public class x86Translator {
                 continue;
             }
 
+            else if(firstToken.equals("wrln")){
+                asmWriter.println("\t\tcall writeln");
+            }
+
             // Output statement
             else if(firstToken.length() > 2 && firstToken.substring(0, 2).equals("wr")){
                 if(firstToken.charAt(2) == 'i'){
                     String var1 = fixBP(tokenizer.nextToken());
                     asmWriter.println(x86Templates.writeInteger(var1));
                 } else {
-
+                    String var1 = fixBP(tokenizer.nextToken());
+                    asmWriter.println(x86Templates.writeString(var1));
                 }
 
                 continue;
@@ -102,7 +107,8 @@ public class x86Translator {
 
             // Input statement
             else if(firstToken.length() > 2 && firstToken.substring(0, 2).equals("rd")){
-
+                String var1 = fixBP(tokenizer.nextToken());
+                asmWriter.println(x86Templates.readInt(var1));
                 continue;
             }
 
@@ -133,17 +139,11 @@ public class x86Translator {
                 continue;
             }
 
-            // Assignment Statement #3 : @x = y OR @x = y + z
-            else if(statement.charAt(0) == '@'){
-
-                continue;
-            }
-
             // copy statement x = y
             else {
-                String var1 = fixBP(firstToken);
-                tokenizer.nextToken();
-                String var2 = fixBP(tokenizer.nextToken());
+                String var1 = fixBP(firstToken);    //x
+                tokenizer.nextToken();              //=
+                String var2 = fixBP(tokenizer.nextToken());//y
 
                 asmWriter.println(x86Templates.copyTemplate(var1, var2));
 
@@ -158,7 +158,12 @@ public class x86Translator {
         StringBuilder builder;
         if(var.contains("bp")){
             builder = new StringBuilder();
-            builder.append("[").append(var.substring(1, var.length())).append("]");
+
+            if(var.contains("@"))
+                builder.append("[").append(var.substring(2, var.length())).append("]"); // @_bp-2 becomes @[bp-2]
+            else
+                builder.append("[").append(var.substring(1, var.length())).append("]"); // _bp-2 becomes [bp-2]
+
             return builder.toString();
         }
         return var;
