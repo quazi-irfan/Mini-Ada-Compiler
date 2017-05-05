@@ -143,4 +143,25 @@ public class x86Templates {
 
         return writeIntegerTemplate;
     }
+
+    public static String negTemplate(String var1, String var2) {
+        String negTemplate = "";
+        if(var2.charAt(0) == '@'){
+            negTemplate = negTemplate.concat("\t\tmov bx,").concat(var2.substring(1, var2.length())).concat("\n");
+            negTemplate = negTemplate.concat("\t\tmov ax, [bx]").concat("\n");
+            negTemplate = negTemplate.concat("\t\tneg ax").concat(var2).concat("\n");
+        } else {
+            negTemplate = negTemplate.concat("\t\tmov ax, ").concat(var2.substring(1, var2.length())).concat("\n");
+            negTemplate = negTemplate.concat("\t\tneg ax").concat("\n");
+        }
+
+        if(var1.charAt(0) == '@'){
+            negTemplate = negTemplate.concat("\t\tmov bx, ").concat(var1.substring(1, var1.length())).concat("\n");
+            negTemplate = negTemplate.concat("\t\tmov [bx], ax");
+        } else {
+            negTemplate = negTemplate.concat("\t\tmov ").concat(var1).concat(", ax").concat("\n");
+        }
+
+        return negTemplate;
+    }
 }

@@ -123,18 +123,22 @@ public class x86Translator {
                 if(operator.equals("+")){
                     asmWriter.println(x86Templates.additionTemplate(var1,var2,var3));
                 } else if(operator.equals("-")){
-
+                    //todo subtraction
                 } else if(operator.equals("*")){
                     asmWriter.println(x86Templates.multiplicationTemplate(var1,var2,var3));
                 } else if(operator.equals("/")){
-
+                    // todo division
                 }
 
                 continue;
             }
 
             // Assignment statement #2 : x = op y
-            else if(statement.length() > 22 && (statement.charAt(16) == '-' || statement.charAt(16) == '+')){
+            else if(statement.length() > 22 && (statement.charAt(16) == '-')){
+                String var1 = fixBP(firstToken);
+                tokenizer.nextToken();
+                String var2 = fixBP(tokenizer.nextToken());
+                asmWriter.println(x86Templates.negTemplate(var1, var2));
 
                 continue;
             }
@@ -151,6 +155,8 @@ public class x86Translator {
             }
         } while (statement != null);
 
+        isSuccessfullyTranslated = true;
+        
         asmWriter.close();
     }
 
