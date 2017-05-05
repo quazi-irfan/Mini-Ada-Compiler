@@ -20,7 +20,7 @@ public class Main {
         String asmFileName = adaFileName.substring(0, adaFileName.length()-4).concat(".asm");
 
         Parser parser = new Parser(adaFileName);
-        if(!parser.isParsingSuccessful()){
+        if(parser.isParsingSuccessful()){
             System.out.println("Parsing successful. Output at " + tacFileName);;
         } else {
             System.out.println("Parsing " + adaFileName + " failed.");
