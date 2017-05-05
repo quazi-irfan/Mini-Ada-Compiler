@@ -16,17 +16,24 @@ public class Main {
         }
 
         String adaFileName = args[0];
+        String tacFileName = adaFileName.substring(0, adaFileName.length()-4).concat(".tac");
+        String asmFileName = adaFileName.substring(0, adaFileName.length()-4).concat(".asm");
+
         Parser parser = new Parser(adaFileName);
         if(!parser.isParsingSuccessful()){
+            System.out.println("Parsing successful. Output at " + tacFileName);;
+        } else {
             System.out.println("Parsing " + adaFileName + " failed.");
             System.exit(1);
         }
 
         SymbolTable symbolTable = parser.getSymbolTable();
-        String tacFileName = adaFileName.substring(0, adaFileName.length()-4).concat(".tac");
         x86Translator x86Translator = new x86Translator(tacFileName, symbolTable);
         if(x86Translator.isSuccessfullyTranslated()){
-            System.out.println("Sucessfully created ASM file.");
+            System.out.println("TAC to x86 translation sucessful. Output at " + asmFileName);
+        } else {
+            System.out.println("TAC to x86 translation failed.");
+            System.exit(1);
         }
     }
 }

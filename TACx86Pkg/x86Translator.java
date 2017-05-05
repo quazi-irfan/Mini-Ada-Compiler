@@ -156,7 +156,7 @@ public class x86Translator {
         } while (statement != null);
 
         isSuccessfullyTranslated = true;
-        
+
         asmWriter.close();
     }
 

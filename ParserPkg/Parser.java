@@ -70,7 +70,7 @@ public class Parser {
     public Parser(String fileName) throws IOException {
         String tacFileName = fileName.substring(0, fileName.length()-4).concat(".tac");
         tacWriter = new PrintWriter(tacFileName);
-        System.out.println("Writing output to " + tacFileName);
+//        System.out.println("Writing output to " + tacFileName);
 
         // initialize symbol table before parsing
         _symbolTable = new SymbolTable();
@@ -96,7 +96,7 @@ public class Parser {
 
         // initialize parsing
         Prog();
-        System.out.println(formattedString(new String[]{"START", "PROC" , _startProcedure}));
+//        System.out.println(formattedString(new String[]{"START", "PROC" , _startProcedure}));
         tacWriter.println(formattedString(new String[]{"START", "PROC" , _startProcedure}));
 
         // print the symbol table of global space
@@ -136,10 +136,10 @@ public class Parser {
         DeclarativePart(_currentProcedureName);
         Procedures();
         match(currentToken, TokenType.BEGIN);
-        System.out.println(formattedString(new String[]{"PROC", _currentProcedureName}));
+//        System.out.println(formattedString(new String[]{"PROC", _currentProcedureName}));
         tacWriter.println(formattedString(new String[]{"PROC", _currentProcedureName}));
         SeqOfStatements();
-        System.out.println(formattedString(new String[]{"ENDP" , _currentProcedureName}));
+//        System.out.println(formattedString(new String[]{"ENDP" , _currentProcedureName}));
         tacWriter.println(formattedString(new String[]{"ENDP" , _currentProcedureName}));
 
         match(currentToken, TokenType.END);
@@ -457,7 +457,7 @@ public class Parser {
             match(currentToken, TokenType.assignop);
             String synthesizedAttributeofExpe = Expr();
 
-            System.out.println(formattedString(new String[]{variable1, "=", synthesizedAttributeofExpe}));
+//            System.out.println(formattedString(new String[]{variable1, "=", synthesizedAttributeofExpe}));
             tacWriter.println(formattedString(new String[]{variable1, "=", synthesizedAttributeofExpe}));
 
         } else {
@@ -472,7 +472,7 @@ public class Parser {
         Params(procedureName_);
         match(currentToken, TokenType.rparen);
 
-        System.out.println(formattedString(new String[]{"call" , procedureName_}));
+//        System.out.println(formattedString(new String[]{"call" , procedureName_}));
         tacWriter.println(formattedString(new String[]{"call" , procedureName_}));
         _currentIndexOfFunctionParameter = 0;
     }
@@ -485,10 +485,10 @@ public class Parser {
 
                 Symbol functionSymbol = _symbolTable.lookup(procedureName_, ESymbolType.function);
                 if(functionSymbol.functionAttributes.parameterModeList.get(_currentIndexOfFunctionParameter) != EParameterModeType.in){
-                    System.out.println(formattedString(new String[]{"push" , "@".concat(currentToken.getLexeme())}));
+//                    System.out.println(formattedString(new String[]{"push" , "@".concat(currentToken.getLexeme())}));
                     tacWriter.println(formattedString(new String[]{"push" , "@".concat(currentToken.getLexeme())}));
                 } else {
-                    System.out.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
+//                    System.out.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                     tacWriter.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                 }
 
@@ -497,7 +497,7 @@ public class Parser {
                 ParamsTail(procedureName_);
 
             } else if (currentToken.getTokenType() == TokenType.num) {
-                System.out.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
+//                System.out.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                 tacWriter.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                 match(currentToken, TokenType.id);
                 _currentIndexOfFunctionParameter++;
@@ -520,10 +520,10 @@ public class Parser {
 
                     Symbol functionSymbol = _symbolTable.lookup(procedureName_, ESymbolType.function);
                     if(functionSymbol.functionAttributes.parameterModeList.get(_currentIndexOfFunctionParameter) != EParameterModeType.in){
-                        System.out.println(formattedString(new String[]{"push" , "@".concat(currentToken.getLexeme())}));
+//                        System.out.println(formattedString(new String[]{"push" , "@".concat(currentToken.getLexeme())}));
                         tacWriter.println(formattedString(new String[]{"push" , "@".concat(currentToken.getLexeme())}));
                     } else {
-                        System.out.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
+//                        System.out.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                         tacWriter.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                     }
 
@@ -532,7 +532,7 @@ public class Parser {
                     ParamsTail(procedureName_);
 
                 } else if(currentToken.getTokenType() == TokenType.num) {
-                    System.out.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
+//                    System.out.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
                     tacWriter.println(formattedString(new String[]{"push" , currentToken.getLexeme()}));
 
                     match(currentToken, TokenType.num);
@@ -571,7 +571,7 @@ public class Parser {
             match(currentToken, TokenType.rparen);
 
             // putln prints a new line at the end
-            System.out.println(formattedString(new String[]{"wrln"}));
+//            System.out.println(formattedString(new String[]{"wrln"}));
             tacWriter.println(formattedString(new String[]{"wrln"}));
         }
     }
@@ -597,11 +597,11 @@ public class Parser {
         if(currentToken.getTokenType() == TokenType.id || currentToken.getTokenType() == TokenType.num || currentToken.getTokenType() == TokenType.string){ // todo check if id was defined before
             if(currentToken.getTokenType() == TokenType.id){
                 Symbol tempSymbol = _symbolTable.lookup(currentToken.getLexeme());
-                System.out.println(formattedString(new String[]{"wri", getSymbolLexemeOrOffset(tempSymbol)}));
+//                System.out.println(formattedString(new String[]{"wri", getSymbolLexemeOrOffset(tempSymbol)}));
                 tacWriter.println(formattedString(new String[]{"wri", getSymbolLexemeOrOffset(tempSymbol)}));
             } else if(currentToken.getTokenType() == TokenType.string){
                 Symbol tempSymbol = _symbolTable.lookup(currentToken.getLexeme());
-                System.out.println(formattedString(new String[]{"wrs", tempSymbol.lexeme}));
+//                System.out.println(formattedString(new String[]{"wrs", tempSymbol.lexeme}));
                 tacWriter.println(formattedString(new String[]{"wrs", tempSymbol.lexeme}));
             }
             currentToken = tokenizer.getNextToken();
@@ -625,7 +625,7 @@ public class Parser {
     private void IdList() {
         if(currentToken.getTokenType() == TokenType.id){
             Symbol tempSymbol = isDefinedIdentifier(currentToken.getLexeme());
-            System.out.println(formattedString(new String[]{"rdi", getSymbolLexemeOrOffset(tempSymbol)}));
+//            System.out.println(formattedString(new String[]{"rdi", getSymbolLexemeOrOffset(tempSymbol)}));
             tacWriter.println(formattedString(new String[]{"rdi", getSymbolLexemeOrOffset(tempSymbol)}));
 
             match(currentToken, TokenType.id);
@@ -643,7 +643,7 @@ public class Parser {
             isDefinedIdentifier(currentToken.getLexeme());
 
             Symbol tempSymbol = isDefinedIdentifier(currentToken.getLexeme());
-            System.out.println(formattedString(new String[]{"rdi", getSymbolLexemeOrOffset(tempSymbol)}));
+//            System.out.println(formattedString(new String[]{"rdi", getSymbolLexemeOrOffset(tempSymbol)}));
             tacWriter.println(formattedString(new String[]{"rdi", getSymbolLexemeOrOffset(tempSymbol)}));
 
             match(currentToken, TokenType.id);
@@ -676,7 +676,7 @@ public class Parser {
             String operator = currentToken.getLexeme();
             match(currentToken, TokenType.addop);
             String synthesizedAttributeofTerm = Term();
-            System.out.println(formattedString(new String[]{variable1, "=" , _inheritedAttrib, operator, synthesizedAttributeofTerm}));
+//            System.out.println(formattedString(new String[]{variable1, "=" , _inheritedAttrib, operator, synthesizedAttributeofTerm}));
             tacWriter.println(formattedString(new String[]{variable1, "=" , _inheritedAttrib, operator, synthesizedAttributeofTerm}));
             return MoreTerm(getSymbolLexemeOrOffset(tempSymbol));
         }
@@ -699,7 +699,7 @@ public class Parser {
             String operator = currentToken.getLexeme();
             match(currentToken, TokenType.mulop);
             String synthesizedAttributeofFactor = Factor();
-            System.out.println(formattedString(new String[]{variable1, "=" , _inheritedAttrib, operator, synthesizedAttributeofFactor}));
+//            System.out.println(formattedString(new String[]{variable1, "=" , _inheritedAttrib, operator, synthesizedAttributeofFactor}));
             tacWriter.println(formattedString(new String[]{variable1, "=" , _inheritedAttrib, operator, synthesizedAttributeofFactor}));
             return MoreFactor(getSymbolLexemeOrOffset(tempSymbol));
         }
@@ -719,7 +719,7 @@ public class Parser {
         } else if(currentToken.getTokenType() == TokenType.num){
 
             Symbol tempSymbol = tempVariable(_currentProcedureName);
-            System.out.println(formattedString(new String[]{getSymbolLexemeOrOffset(tempSymbol), "=", currentToken.getLexeme()}));
+//            System.out.println(formattedString(new String[]{getSymbolLexemeOrOffset(tempSymbol), "=", currentToken.getLexeme()}));
             tacWriter.println(formattedString(new String[]{getSymbolLexemeOrOffset(tempSymbol), "=", currentToken.getLexeme()}));
 
             match(currentToken, TokenType.num);
@@ -736,7 +736,7 @@ public class Parser {
             Symbol tempSymbol = tempVariable(_currentProcedureName);
             String variable1 = getSymbolLexemeOrOffset(tempSymbol);
             String synthesizedAttributeofFactor = Factor();
-            System.out.println(formattedString(new String[]{variable1, "=", "-".concat(synthesizedAttributeofFactor)}));
+//            System.out.println(formattedString(new String[]{variable1, "=", "-".concat(synthesizedAttributeofFactor)}));
             tacWriter.println(formattedString(new String[]{variable1, "=", "-".concat(synthesizedAttributeofFactor)}));
             return getSymbolLexemeOrOffset(tempSymbol);
         }
