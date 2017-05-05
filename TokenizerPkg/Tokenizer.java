@@ -137,6 +137,7 @@ public class Tokenizer {
             // else the word token is an identifier token
             catch (Exception e){
                 token.setTokenType(TokenType.id);
+                token.setLexeme("_".concat(token.getLexeme())); //todo Hack to allow c variable
             }
         }
     }

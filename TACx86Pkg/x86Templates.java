@@ -44,10 +44,30 @@ public class x86Templates {
     }
 
     public static String multiplicationTemplate(String var1, String var2, String var3) {
-        String multiplicationTemplate =     "\t\tmov ax, " + var2 + "\n" +
-                                            "\t\tmov bx, " + var3 + "\n" +
-                                            "\t\timul bx\n" +
-                                            "\t\tmov " + var1 + ", ax ";
+        String multiplicationTemplate = "";
+        if(var2.charAt(0) == '@'){
+            multiplicationTemplate = multiplicationTemplate.concat("\t\tmov bx, ").concat(var2.substring(1, var2.length())).concat("\n");
+            multiplicationTemplate = multiplicationTemplate.concat("\t\tmov ax, [bx]").concat("\n");
+        } else {
+            multiplicationTemplate = multiplicationTemplate.concat("\t\tmov ax, ").concat(var2).concat("\n");
+        }
+
+        if(var3.charAt(0) == '@'){
+            multiplicationTemplate = multiplicationTemplate.concat("\t\tmov bx, ").concat(var3.substring(1, var3.length())).concat("\n");
+            multiplicationTemplate = multiplicationTemplate.concat("\t\tmov cx, [bx]").concat("\n");
+            multiplicationTemplate = multiplicationTemplate.concat("\t\timul cx").concat("\n");
+        } else {
+            multiplicationTemplate = multiplicationTemplate.concat("\t\tmov bx, ").concat(var3).concat("\n");
+            multiplicationTemplate = multiplicationTemplate.concat("\t\timul bx").concat("\n");
+        }
+
+        if(var1.charAt(0) == '@'){
+            multiplicationTemplate = multiplicationTemplate.concat("\t\tmov bx,").concat(var1.substring(1, var1.length())).concat("\n");
+            multiplicationTemplate = multiplicationTemplate.concat("\t\tmov [bx], ax");
+        } else {
+            multiplicationTemplate = multiplicationTemplate.concat("\t\tmov ").concat(var1).concat(", ax");
+        }
+
         return multiplicationTemplate;
     }
 
