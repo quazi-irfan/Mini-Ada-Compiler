@@ -216,7 +216,8 @@ Doxbox Output,
 C:/>TwoNum
 Summation of 1 and 2 is 3
 ```
-#Example 2
+## Example 2
+
 Three.ada contains,
 ```Ada
 procedure three is
