@@ -1,7 +1,7 @@
 # Mini-Ada to x86 Compiler
-This is a mini-Ada to x86 compiler(16 bit).
-This version of Ada supports only integer and string(limited) data type, and allows assignment and IO statement. 
-In an assignment statement, it supports expressions, with addition, multiplication and unary negation operator.
+This is a mini-Ada to x86 compiler. Our compiled program will run on 16 bit architecture(i.e. Intel 8086/8088).
+Our version of Ada supports only integer and string(limited) data type, and allows assignment and IO statement. 
+It supports expressions, with addition, multiplication and unary negation operator, in an assignment statement,
 If all operators have same precedence in an expression, it uses right to left associativity.
 In an IO statement, it supports integer input/output, and string output.
 
@@ -10,7 +10,7 @@ We have to run the following command to compile our compiler,
 ```bash
 javac adac.java
 ```
-Now our compiler is ready to take ada source file.
+Now our compiler is ready to compile ada source file.
 
 Example Hello.ada file contains,
 ```Ada
@@ -83,7 +83,7 @@ main	ENDP
 (Note: that all user defined identifiers has an underscore prefix added to them in both TAC and ASM file.)
 
 ## Frontend
-Now we will use [MASM32](http://www.masm32.com) to translate our x86 instructions to object code. The files `ml.exe` and `link16.exe` are found under `<masm32>/bin`
+Now we will use Microsoft Macro Assembler [MASM32](http://www.masm32.com) to translate our x86 instructions to object code. The files `ml.exe` and `link16.exe` are found under `<masm32>/bin`
 
 Since [IO.asm](https://github.com/iamcreasy/Mini-Ada-Compiler/blob/master/io.asm) contains the IO macros we will need copy IO.asm in the same direcoty as Hello.ASM
 
