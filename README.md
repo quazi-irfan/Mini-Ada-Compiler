@@ -14,6 +14,7 @@ Now our compiler is ready to take ada source file.
 
 Example Hello.ada file contains,
 ```Ada
+-- Ada Hello World Program
 procedure main is
 begin
   putln("Hello World");
@@ -107,9 +108,10 @@ Hello World
 
 # More Ada Examples
 
-## Example 1
+## Example 1 : Prints the result of an expression
 TwoNum.ada contains,
 ```Ada
+-- Print the result of adding 1 and 2
 procedure TwoNum is
  a,b,c:integer;
 begin
@@ -216,10 +218,12 @@ Doxbox Output,
 C:/>TwoNum
 Summation of 1 and 2 is 3
 ```
-## Example 2
+## Example 2 : Take two numbers input from the user and perform some calculation in a procedure(void functino in C)
 
 Three.ada contains,
 ```Ada
+-- procedure three take two number input from the user
+-- procedure test perform some calculation on them, and passes back the result
 procedure three is
  a, b, c:integer;
  procedure test(in a,b:integer; out c:integer) is
