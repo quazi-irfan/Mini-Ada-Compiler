@@ -8,7 +8,7 @@ import TACx86Pkg.x86Translator;
  * Assignment 8 : Translate your Three Address Code into 8086 assembly language.
  */
 
-public class Main {
+public class adac {
     public static void main(String[] args) throws Exception {
         if(args.length < 1){
             System.out.println("Enter input file name as 2nd argument.");
