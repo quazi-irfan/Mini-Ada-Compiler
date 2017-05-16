@@ -218,7 +218,7 @@ Doxbox Output,
 C:/>TwoNum
 Summation of 1 and 2 is 3
 ```
-## Example 2 : Take two numbers input from the user and perform some calculation in a procedure(void functino in C)
+## Example 2 : Take two numbers input from the user and perform some calculation on them
 
 Three.ada contains,
 ```Ada
