@@ -104,3 +104,115 @@ Copy the file to Dosbox directory, and run the file. We will see the following o
 C:\>hello.exe
 Hello World
 ```
+
+# More Ada Examples
+
+## Example 1
+TwoNum.ada contains,
+```Ada
+procedure TwoNum is
+ a,b,c:integer;
+begin
+  a:= 1;
+  b:= 2;
+  c:= a + b;
+  putln("Summation of 1 and 2 is ", c);  
+end TwoNum;
+```
+
+After compilation, TwoNum.tac contains
+```
+PROC    _TWONUM 
+_t0     =       1       
+_A      =       _t0     
+_t1     =       2       
+_B      =       _t1     
+_t2     =       _A      +       _B      
+_C      =       _t2     
+wrs     _s0     
+wri     _C      
+wrln    
+ENDP    _TWONUM 
+START   PROC    _TWONUM 
+```
+
+TwoNum.asm
+```asm
+		.model small
+		.586
+		.stack 100h
+		.data
+_s0     db      "Summation of 1 and 2 is ","$"
+_t0     dw      ?       
+_t1     dw      ?       
+_t2     dw      ?       
+_A      dw      ?       
+_B      dw      ?       
+_C      dw      ?       
+		.code
+		include io.asm
+
+		;PROC    _TWONUM 
+_TWONUM		proc
+		push bp
+		mov bp, sp
+		sub sp, 12
+
+		;_t0     =       1       
+		mov ax, 1
+		mov _t0 , ax
+
+		;_A      =       _t0     
+		mov ax, _t0
+		mov _A , ax
+
+		;_t1     =       2       
+		mov ax, 2
+		mov _t1 , ax
+
+		;_B      =       _t1     
+		mov ax, _t1
+		mov _B , ax
+
+		;_t2     =       _A      +       _B      
+		mov ax, _A
+		add ax, _B
+		mov _t2 , ax
+
+		;_C      =       _t2     
+		mov ax, _t2
+		mov _C , ax
+
+		;wrs     _s0     
+		mov dx, offset _s0
+		call writestr
+
+		;wri     _C      
+		mov ax, _C
+		call writeint
+
+		;wrln    
+		call writeln
+
+		;ENDP    _TWONUM 
+		add sp, 12
+		pop bp
+		ret 0
+_TWONUM		ENDP
+
+		;START   PROC    _TWONUM 
+main		PROC
+		mov ax, @data
+		mov ds, ax
+		call _TWONUM
+		mov ah, 4ch
+		int 21h
+main		ENDP
+		END main
+```
+
+Doxbox Output,
+```
+C:/>TwoNum
+Summation of 1 and 2 is 3
+```
