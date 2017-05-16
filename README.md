@@ -1,4 +1,4 @@
-# Mini-Ada-Compiler
+# Mini-Ada to x86 Compiler
 This is a mini-Ada to x86 compiler(16 bit).
 This version of Ada supports only integer and string(limited) data type, and allows assignment and IO statement. 
 In an assignment statement, it supports expressions, with addition, multiplication and unary negation operator.
