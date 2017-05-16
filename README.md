@@ -216,3 +216,195 @@ Doxbox Output,
 C:/>TwoNum
 Summation of 1 and 2 is 3
 ```
+#Example 2
+Three.ada contains,
+```Ada
+procedure three is
+ a, b, c:integer;
+ procedure test(in a,b:integer; out c:integer) is
+ 	e : integer;
+  begin
+	e := a * 10 + b;
+	c := e; 
+ end test;
+begin
+  put("Enter the first number ");
+  get(a);
+  put("Enter the second number ");
+  get(b);
+  test(a, b, c);
+  put("The result of " , a ," * 10 + ", b, " is : ", c );
+end three;
+```
+
+After compilation, three.tac contains
+```
+PROC    _TEST   
+_bp-6   =       10      
+_bp-4   =       _bp+8   *       _bp-6   
+_bp-8   =       _bp-4   +       _bp+6   
+_bp-2   =       _bp-8   
+@_bp+4  =       _bp-2   
+ENDP    _TEST   
+PROC    _THREE  
+wrs     _s0     
+rdi     _A      
+wrs     _s1     
+rdi     _B      
+push    _A      
+push    _B      
+push    @_C     
+call    _TEST   
+wrs     _s2     
+wri     _A      
+wrs     _s3     
+wri     _B      
+wrs     _s4     
+wri     _C      
+ENDP    _THREE  
+START   PROC    _THREE  
+```
+
+and three.asm contains,
+
+```asm
+		.model small
+		.586
+		.stack 100h
+		.data
+_s0     db      "Enter the first number ","$"
+_s1     db      "Enter the second number ","$"
+_s2     db      "The result of ","$"
+_s3     db      " * 10 + ","$"
+_s4     db      " is : ","$"
+_A      dw      ?       
+_B      dw      ?       
+_C      dw      ?       
+		.code
+		include io.asm
+
+		;PROC    _TEST   
+_TEST		proc
+		push bp
+		mov bp, sp
+		sub sp, 8
+
+		;_bp-6   =       10      
+		mov ax, 10
+		mov [bp-6] , ax
+
+		;_bp-4   =       _bp+8   *       _bp-6   
+		mov ax, [bp+8]
+		mov bx, [bp-6]
+		imul bx
+		mov [bp-4], ax
+
+		;_bp-8   =       _bp-4   +       _bp+6   
+		mov ax, [bp-4]
+		add ax, [bp+6]
+		mov [bp-8] , ax
+
+		;_bp-2   =       _bp-8   
+		mov ax, [bp-8]
+		mov [bp-2] , ax
+
+		;@_bp+4  =       _bp-2   
+		mov ax, [bp-2]
+		mov bx, [bp+4]
+		mov [bx], ax
+
+		;ENDP    _TEST   
+		add sp, 8
+		pop bp
+		ret 6
+_TEST		ENDP
+
+		;PROC    _THREE  
+_THREE		proc
+		push bp
+		mov bp, sp
+		sub sp, 6
+
+		;wrs     _s0     
+		mov dx, offset _s0
+		call writestr
+
+		;rdi     _A      
+		call readint
+		mov ax, bx
+		mov _A , ax
+
+		;wrs     _s1     
+		mov dx, offset _s1
+		call writestr
+
+		;rdi     _B      
+		call readint
+		mov ax, bx
+		mov _B , ax
+
+		;push    _A      
+		mov ax, _A
+		push ax
+
+		;push    _B      
+		mov ax, _B
+		push ax
+
+		;push    @_C     
+		mov ax, offset _C
+		push ax
+
+		;call    _TEST   
+		call _TEST
+
+		;wrs     _s2     
+		mov dx, offset _s2
+		call writestr
+
+		;wri     _A      
+		mov ax, _A
+		call writeint
+
+		;wrs     _s3     
+		mov dx, offset _s3
+		call writestr
+
+		;wri     _B      
+		mov ax, _B
+		call writeint
+
+		;wrs     _s4     
+		mov dx, offset _s4
+		call writestr
+
+		;wri     _C      
+		mov ax, _C
+		call writeint
+
+		;ENDP    _THREE  
+		add sp, 6
+		pop bp
+		ret 0
+_THREE		ENDP
+
+		;START   PROC    _THREE  
+main		PROC
+		mov ax, @data
+		mov ds, ax
+		call _THREE
+		mov ah, 4ch
+		int 21h
+main		ENDP
+		END main
+```
+
+Output,
+```
+C:/>three
+Enter the first number 5
+
+Enter the second number 3
+
+The result of 5 * 10 + 3 is : 53
+```
