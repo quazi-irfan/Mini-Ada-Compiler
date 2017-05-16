@@ -162,7 +162,7 @@ public class x86Translator {
         asmWriter.close();
     }
 
-    private String fixBP(String var) {
+    private String fixBP(String var) { // todo : Does not handle -_bp-12
         StringBuilder builder;
         if(var.contains("bp")){
             builder = new StringBuilder();
