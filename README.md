@@ -42,42 +42,42 @@ START   PROC    _MAIN
 ```
 Contant of the Hello.ASM file,
 ```asm
-		.model small
-		.586
-		.stack 100h
-		.data
+	.model small
+	.586
+	.stack 100h
+	.data
 _s0    db      "Hello World","$"
-		.code
-		include io.asm
+	.code
+	include io.asm
 
-		  ;PROC    _MAIN   
+	  ;PROC    _MAIN   
 _MAIN	proc
-		  push bp
-		  mov bp, sp
-		  sub sp, 0
+	  push bp
+	  mov bp, sp
+	  sub sp, 0
 
-		  ;wrs     _s0     
-		  mov dx, offset _s0
-		  call writestr
+	  ;wrs     _s0     
+	  mov dx, offset _s0
+	  call writestr
 
-		  ;wrln    
-		  call writeln
+	  ;wrln    
+	  call writeln
 
-		  ;ENDP    _MAIN   
-		  add sp, 0
-		  pop bp
-		  ret 0
+	  ;ENDP    _MAIN   
+	  add sp, 0
+	  pop bp
+	  ret 0
 _MAIN	ENDP
 
-		  ;START   PROC    _MAIN   
+	  ;START   PROC    _MAIN   
 main	PROC
-		  mov ax, @data
-		  mov ds, ax
-		  call _MAIN
-		  mov ah, 4ch
-		  int 21h
+	  mov ax, @data
+	  mov ds, ax
+	  call _MAIN
+	  mov ah, 4ch
+	  int 21h
 main	ENDP
-		  END main
+	  END main
 
 ```
 (Note: that all user defined identifiers has an underscore prefix added to them in both TAC and ASM file.)
