@@ -30,7 +30,7 @@ TAC to x86 translation sucessful. Output at Hello.asm
 
 Our compiler would would create Hello.tac and Hello.asm file. Hello.TAC
 ([Three Address Code](https://en.wikipedia.org/wiki/Three-address_code)) file contains our intermediate representation, 
-and Hello.ASM contains the x86 instructions. 
+and Hello.ASM contains the MASM style x86 assembly instructions. 
 
 Contant of the Hello.TAC file,
 ```
